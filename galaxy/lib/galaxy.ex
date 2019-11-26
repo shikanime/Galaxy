@@ -1,0 +1,2 @@
+defmodule Galaxy do
+end
