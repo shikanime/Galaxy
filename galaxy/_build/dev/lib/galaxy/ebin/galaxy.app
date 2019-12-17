@@ -1,0 +1,10 @@
+{application,galaxy,
+             [{applications,[kernel,stdlib,elixir,logger]},
+              {description,"galaxy"},
+              {modules,['Elixir.Galaxy','Elixir.Galaxy.Application',
+                        'Elixir.Galaxy.Cluster',
+                        'Elixir.Galaxy.Cluster.Erldist',
+                        'Elixir.Galaxy.Erlhosts']},
+              {registered,[]},
+              {vsn,"0.1.0"},
+              {mod,{'Elixir.Galaxy.Application',[]}}]}.
