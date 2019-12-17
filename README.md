@@ -42,7 +42,7 @@ defmodule Andromeda.App do
 
   def start(_type, _args) do
     children = [
-      {Galaxy.Erlhost, []},
+      {Galaxy.Erlhost, [name: Andromeda.Galaxy, cluster: Andromeda.Cluster]},
       # ..other children..
     ]
     Supervisor.start_link(children, strategy: :one_for_one, name: Andromeda.Supervisor)
@@ -51,46 +51,6 @@ end
 ```
 
 The following section describes topology configuration in more detail.
-
-## Example Configuration
-
-You can configure `galaxy` either in your Mix config file (`config.exs`) as
-shown below, or construct the keyword list structure manually, as shown in the
-previous section.
-
-```elixir
-config :andromeda, Andromeda.Galaxy,
-    hosts: [:"a@127.0.0.1", :"b@127.0.0.1"],
-```
-
-Either way, you need to pass the configuration to the `Galaxy` module in
-it's start arguments.
-
-```elixir
-defmodule Andromeda.Galaxy do
-  use Galaxy, otp_app: :andromeda
-
-  @impl true
-  def init(_type, config) do
-    {:ok, Keyword.put(config, :hosts, [:"a@127.0.0.1", :"b@127.0.0.1"])}
-  end
-
-  @impl true
-  def connect(node) do
-    Node.connect(node)
-  end
-
-  @impl true
-  def disconnect(node) do
-    Node.disconnect(node)
-  end
-
-  @impl true
-  def list() do
-    Node.list()
-  end
-end
-```
 
 ## Clustering
 
@@ -102,23 +62,6 @@ You have a handful of choices with regards to cluster management out of the box:
   nodes gossiping a heartbeat.
 - `Galaxy.Kubernetes`, which uses the Kubernetes Metadata API to query
   nodes based on a label selector and basename.
-- `Galaxy.Kubernetes.DNS`, which uses DNS to join nodes under a shared
-  headless service in a given namespace.
-- `Galaxy.Rancher`, which like the Kubernetes strategy, uses a
-  metadata API to query nodes to cluster with.
-
-You can also define your own strategy implementation, by implementing the
-`Galaxy` behavior. This behavior expects you to implement a
-`start_link/1` callback, optionally overriding `child_spec/1` if needed. You don't necessarily have
-to start a process as part of your strategy, but since it's very likely you will need to maintain some state, designing your
-strategy as an OTP process (e.g. `GenServer`) is the ideal method, however any
-valid OTP process will work.
-
-If you do not wish to use the default Erlang distribution protocol, you may provide an alternative means of connecting/
-disconnecting nodes via the `connect` and `disconnect` configuration options, if not using Erlang distribution you must provide a `list_nodes` implementation as well.
-They take a `{module, fun, args}` tuple, and append the node name being targeted to the `args` list. How to implement distribution in this way is left as an
-exercise for the reader, but I recommend taking a look at the [Firenest](https://github.com/phoenixframework/firenest) project
-currently under development. By default, `galaxy` uses Distributed Erlang.
 
 ## License
 
