@@ -15,7 +15,6 @@ You can find supporting documentation [here](https://hexdocs.pm/galaxy).
   - Multicast UDP gossip, using a configurable port/multicast address,
   - Kubernetes via its metadata API using via a configurable label selector and
     node basename; or alternatively, using DNS.
-  - Rancher, via its [metadata API][rancher-api]
 - Easy to provide your own custom clustering strategies for your specific environment.
 - Easy to use provide your own distribution plumbing (i.e. something other than
   Distributed Erlang), by implementing a small set of callbacks. This allows
@@ -66,5 +65,3 @@ You have a handful of choices with regards to cluster management out of the box:
 ## License
 
 MIT
-
-[rancher-api]: http://rancher.com/docs/rancher/latest/en/rancher-services/metadata-service/
