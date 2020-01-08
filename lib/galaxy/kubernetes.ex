@@ -2,7 +2,7 @@ defmodule Galaxy.Kubernetes do
   @moduledoc """
   This clustering strategy works by loading all your Erlang nodes (within Pods) in the current [Kubernetes
   namespace](https://kubernetes.io/docs/concepts/service-networking/dns-pod-service/).
-  It will fetch the hosts of all pods under a shared headless service and attempt to connect.
+  It will fetch the targets of all pods under a shared headless service and attempt to connect.
   It will continually monitor and update its connections every 5s.
 
   It assumes that all Erlang nodes were launched under a base name, are using longnames, and are unique
@@ -55,10 +55,10 @@ defmodule Galaxy.Kubernetes do
 
   defp polling_nodes(%{cluster: cluster, polling: polling, service: service} = state) do
     Enum.each(service, fn service ->
-      case :inet_res.getbyname(to_charlist(service), :a) do
-        {:ok, {:hostent, _fqdn, [], :inet, _value, hosts}} ->
-          hosts
-          |> Enum.map(&List.to_atom(:inet.ntoa(&1)))
+      case :inet_res.getbyname(to_charlist(service), :srv) do
+        {:ok, {:hostent, _name, [], :srv, _lenght, addresses}} ->
+          addresses
+          |> Enum.map(fn {_priority, _weight, _port, target} -> List.to_atom(target) end)
           |> :net_adm.world_list()
           |> Enum.uniq()
           |> List.myers_difference(cluster.members())
