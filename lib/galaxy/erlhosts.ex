@@ -36,30 +36,35 @@ defmodule Galaxy.Erlhosts do
     GenServer.start_link(__MODULE__, start_opts, sup_opts)
   end
 
+  def child_spec(init_arg) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, [init_arg]},
+      restart: :transient
+    }
+  end
+
   @impl true
   def init(options) do
     cluster = Keyword.get(options, :cluster, Galaxy.Cluster.Erldist)
     polling = Keyword.get(options, :polling, @default_polling_interval)
-
-    case :net_adm.host_file() do
-      {:error, _reason} ->
-        Logget.debug("Couldn't find .host.erlang file")
-        :ignore
-
-      hosts ->
-        flags = %{
-          cluster: cluster,
-          polling: polling,
-          hosts: hosts
-        }
-
-        {:ok, flags, {:continue, :connect}}
-    end
+    {:ok, %{cluster: cluster, polling: polling}, {:continue, :connect}}
   end
 
   @impl true
   def handle_continue(:connect, state) do
-    {:noreply, polling_nodes(state)}
+    case :net_adm.host_file() do
+      {:error, :enoent} ->
+        Logger.debug("Couldn't find .host.erlang file")
+        {:stop, {:shutdown, :enoent}, state}
+
+      {:error, :eacces} ->
+        Logger.debug("No enough permission to read .host.erlang file")
+        {:stop, {:shutdown, :eacces}, state}
+
+      hosts ->
+        {:noreply, polling_nodes(%{state | hosts: hosts})}
+    end
   end
 
   @impl true

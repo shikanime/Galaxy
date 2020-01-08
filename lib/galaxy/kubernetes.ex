@@ -20,33 +20,32 @@ defmodule Galaxy.Kubernetes do
     GenServer.start_link(__MODULE__, start_opts, sup_opts)
   end
 
+  def child_spec(init_arg) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, [init_arg]},
+      restart: :transient
+    }
+  end
+
   @impl true
   def init(options) do
     cluster = Keyword.get(options, :cluster, Galaxy.Cluster.Erldist)
     polling = Keyword.get(options, :polling, @default_polling_interval)
-
-    case System.get_env("KUBERNETES_SERVICE_NAME") do
-      nil ->
-        Logget.debug("Couldn't find KUBERNETES_SERVICE_NAME environment variable")
-        :ignore
-
-      service ->
-        mode = System.get_env("K8S_ADDRESS_TYPE") |> String.to_atom() || :hostname
-
-        flags = %{
-          cluster: cluster,
-          polling: polling,
-          mode: mode,
-          service: service
-        }
-
-        {:ok, flags, {:continue, :connect}}
-    end
+    mode = System.get_env("POD_ADDRESS_TYPE", "hostname") |> String.to_atom()
+    {:ok, %{cluster: cluster, polling: polling, mode: mode}, {:continue, :connect}}
   end
 
   @impl true
   def handle_continue(:connect, state) do
-    {:noreply, polling_nodes(state)}
+    case System.get_env("POD_SERVICE_NAME") do
+      nil ->
+        Logger.debug("Couldn't find POD_SERVICE_NAME environment variable")
+        {:stop, {:shutdown, :not_found}, state}
+
+      service ->
+        {:noreply, polling_nodes(%{state | service: service})}
+    end
   end
 
   @impl true
@@ -66,16 +65,13 @@ defmodule Galaxy.Kubernetes do
           |> Enum.each(&sync_cluster(cluster, &1))
 
         {:error, :nxdomain} ->
-          Logger.error("Node couldn't fetch unvalid DNS")
+          Logger.error("Cannot be resolve DNS")
 
         {:error, :timeout} ->
-          Logger.error("Node couldn't fetch DNS in time")
-
-        {:error, :formerr} ->
-          Logger.error("Node couldn't fetch unvalid DNS")
+          Logger.error("DNS timeout")
 
         {:error, :refused} ->
-          Logger.error("Node couldn't fetch unauthorized DNS")
+          Logger.error("DNS respond with unauthorized request")
       end
     end)
 
