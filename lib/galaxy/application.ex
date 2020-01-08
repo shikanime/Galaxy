@@ -5,8 +5,8 @@ defmodule Galaxy.Application do
 
   def start(_type, _args) do
     children = [
-      {Galaxy.Erlhosts, []}
-      # {Galaxy.Kubernetes, []}
+      {Galaxy.Erlhosts, []},
+      {Galaxy.Kubernetes, []}
     ]
 
     opts = [strategy: :one_for_one, name: Galaxy.Supervisor]
