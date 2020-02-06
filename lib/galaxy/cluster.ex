@@ -1,7 +1,7 @@
 defmodule Galaxy.Cluster do
-  @callback connect(any) :: boolean() | :ignored
+  @callback connect(node) :: boolean() | :ignored
 
-  @callback disconnect(any) :: boolean() | :ignored
+  @callback disconnect(node) :: boolean() | :ignored
 
-  @callback list :: list(:visible | :hidden | :connected | :this | :known)
+  @callback members() :: list(node)
 end
