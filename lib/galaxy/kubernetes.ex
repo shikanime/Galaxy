@@ -22,14 +22,15 @@ defmodule Galaxy.Kubernetes do
 
   @impl true
   def init(options) do
-    case System.get_env("SERVICE_NAME") do
+    case System.get_env("RELEASE_SERVICE") do
       nil ->
-        Logger.debug("Couldn't find SERVICE_NAME environment variable")
+        Logger.debug("Couldn't find RELEASE_SERVICE environment variable")
         :ignore
 
       service ->
         cluster = Keyword.get(options, :cluster, Galaxy.Cluster.Erldist)
         polling = Keyword.get(options, :polling, @default_polling_interval)
+        service = normalize_service_name("#{service}-headless")
         {:ok, %{cluster: cluster, polling: polling, service: service}, {:continue, :connect}}
     end
   end
@@ -94,5 +95,9 @@ defmodule Galaxy.Kubernetes do
 
   defp sync_cluster(_, _) do
     :ok
+  end
+
+  defp normalize_service_name(s) do
+    String.replace(s, "_", "-")
   end
 end
