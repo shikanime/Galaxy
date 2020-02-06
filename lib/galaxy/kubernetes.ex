@@ -20,32 +20,23 @@ defmodule Galaxy.Kubernetes do
     GenServer.start_link(__MODULE__, start_opts, sup_opts)
   end
 
-  def child_spec(init_arg) do
-    %{
-      id: __MODULE__,
-      start: {__MODULE__, :start_link, [init_arg]},
-      restart: :transient
-    }
-  end
-
   @impl true
   def init(options) do
-    cluster = Keyword.get(options, :cluster, Galaxy.Cluster.Erldist)
-    polling = Keyword.get(options, :polling, @default_polling_interval)
-    mode = System.get_env("POD_ADDRESS_TYPE", "hostname") |> String.to_atom()
-    {:ok, %{cluster: cluster, polling: polling, mode: mode}, {:continue, :connect}}
+    case System.get_env("SERVICE_NAME") do
+      nil ->
+        Logger.debug("Couldn't find SERVICE_NAME environment variable")
+        :ignore
+
+      service ->
+        cluster = Keyword.get(options, :cluster, Galaxy.Cluster.Erldist)
+        polling = Keyword.get(options, :polling, @default_polling_interval)
+        {:ok, %{cluster: cluster, polling: polling, service: service}, {:continue, :connect}}
+    end
   end
 
   @impl true
   def handle_continue(:connect, state) do
-    case System.get_env("POD_SERVICE_NAME") do
-      nil ->
-        Logger.debug("Couldn't find POD_SERVICE_NAME environment variable")
-        {:stop, {:shutdown, :not_found}, state}
-
-      service ->
-        {:noreply, polling_nodes(%{state | service: service})}
-    end
+    {:noreply, polling_nodes(state)}
   end
 
   @impl true
@@ -95,15 +86,13 @@ defmodule Galaxy.Kubernetes do
     end)
   end
 
-  defp sync_cluster(_state, {:eq, nodes}) do
-    Enum.each(nodes, fn node ->
-      Logger.debug(["Node ", to_string(node), " is already part of the cluster"])
-    end)
-  end
-
-  defp sync_cluster(_state, {:ins, nodes}) do
+  defp sync_cluster(_, {:ins, nodes}) do
     Enum.each(nodes, fn node ->
       Logger.debug(["Node ", to_string(node), " discovered but not sync to the cluster"])
     end)
+  end
+
+  defp sync_cluster(_, _) do
+    :ok
   end
 end
