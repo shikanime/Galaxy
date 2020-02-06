@@ -12,7 +12,6 @@ You can find supporting documentation [here](https://hexdocs.pm/galaxy).
 - Automatic cluster formation/healing
 - Choice of multiple clustering strategies out of the box:
   - Standard Distributed Erlang facilities (e.g. `.hosts.erlang`), which supports IP-based or DNS-based names
-  - Multicast UDP gossip, using a configurable port/multicast address,
   - Kubernetes via its metadata API using via a configurable label selector and
     node basename; or alternatively, using DNS.
 - Easy to provide your own custom clustering strategies for your specific environment.
@@ -31,23 +30,9 @@ end
 
 ## Usage
 
-It is easy to get started using `galaxy`, simply decide which strategy you
-want to use to form a cluster, define a topology, and then start the module in
-the supervision tree of an application in your Elixir system, as demonstrated below:
-
-```elixir
-defmodule Andromeda.App do
-  use Application
-
-  def start(_type, _args) do
-    children = [
-      {Galaxy.Erlhost, [name: Andromeda.Galaxy, cluster: Andromeda.Cluster]},
-      # ..other children..
-    ]
-    Supervisor.start_link(children, strategy: :one_for_one, name: Andromeda.Supervisor)
-  end
-end
-```
+It is easy to get started using `galaxy`, the best strategy is chosen for you
+based on the orchestration context, define a topology, and then start the module in
+the supervision tree of an application in your Elixir system.
 
 The following section describes topology configuration in more detail.
 
@@ -57,8 +42,6 @@ You have a handful of choices with regards to cluster management out of the box:
 
 - `Galaxy.Erlhost`, which uses the `.hosts.erlang` file to
   determine which hosts to connect to.
-- `Galaxy.Gossip`, which uses multicast UDP to form a cluster between
-  nodes gossiping a heartbeat.
 - `Galaxy.Kubernetes`, which uses the Kubernetes Metadata API to query
   nodes based on a label selector and basename.
 
