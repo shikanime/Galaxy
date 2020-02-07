@@ -30,7 +30,6 @@ defmodule Galaxy.Kubernetes do
       service ->
         cluster = Keyword.get(options, :cluster, Galaxy.Cluster.Erldist)
         polling = Keyword.get(options, :polling, @default_polling_interval)
-        service = normalize_service_name("#{service}-headless")
         {:ok, %{cluster: cluster, polling: polling, service: service}, {:continue, :connect}}
     end
   end
@@ -46,26 +45,24 @@ defmodule Galaxy.Kubernetes do
   end
 
   defp polling_nodes(%{cluster: cluster, polling: polling, service: service} = state) do
-    Enum.each(service, fn service ->
-      case :inet_res.getbyname(to_charlist(service), :srv) do
-        {:ok, {:hostent, _name, [], :srv, _lenght, addresses}} ->
-          addresses
-          |> Enum.map(fn {_priority, _weight, _port, target} -> List.to_atom(target) end)
-          |> :net_adm.world_list()
-          |> Enum.uniq()
-          |> List.myers_difference(cluster.members())
-          |> Enum.each(&sync_cluster(cluster, &1))
+    case :inet_res.getbyname(to_charlist(service), :srv) do
+      {:ok, {:hostent, _name, [], :srv, _lenght, addresses}} ->
+        addresses
+        |> Enum.map(fn {_priority, _weight, _port, target} -> List.to_atom(target) end)
+        |> :net_adm.world_list()
+        |> Enum.uniq()
+        |> List.myers_difference(cluster.members())
+        |> Enum.each(&sync_cluster(cluster, &1))
 
-        {:error, :nxdomain} ->
-          Logger.error("Cannot be resolve DNS")
+      {:error, :nxdomain} ->
+        Logger.error("Cannot be resolve DNS")
 
-        {:error, :timeout} ->
-          Logger.error("DNS timeout")
+      {:error, :timeout} ->
+        Logger.error("DNS timeout")
 
-        {:error, :refused} ->
-          Logger.error("DNS respond with unauthorized request")
-      end
-    end)
+      {:error, :refused} ->
+        Logger.error("DNS respond with unauthorized request")
+    end
 
     Process.send_after(self(), :reconnect, polling)
 
@@ -95,9 +92,5 @@ defmodule Galaxy.Kubernetes do
 
   defp sync_cluster(_, _) do
     :ok
-  end
-
-  defp normalize_service_name(s) do
-    String.replace(s, "_", "-")
   end
 end
