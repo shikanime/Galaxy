@@ -24,10 +24,10 @@ defmodule Galaxy.Kubernetes do
   def init(options) do
     case System.get_env("RELEASE_SERVICE") do
       nil ->
-        Logger.debug("Couldn't find RELEASE_SERVICE environment variable")
         :ignore
 
       service ->
+        Logger.info(["Watching ", service, " Kubernetes headless service"])
         cluster = Keyword.get(options, :cluster, Galaxy.Cluster.Erldist)
         polling = Keyword.get(options, :polling, @default_polling_interval)
         {:ok, %{cluster: cluster, polling: polling, service: service}, {:continue, :connect}}

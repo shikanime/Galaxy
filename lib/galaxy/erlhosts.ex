@@ -40,10 +40,10 @@ defmodule Galaxy.Erlhosts do
   def init(options) do
     case :net_adm.host_file() do
       {:error, _} ->
-        Logger.info("Couldn't find .hosts.erlang file")
         :ignore
 
       hosts ->
+        Enum.each(hosts, &Logger.info(["Watching ", to_string(&1), " host"]))
         cluster = Keyword.get(options, :cluster, Galaxy.Cluster.Erldist)
         polling = Keyword.get(options, :polling, @default_polling_interval)
         {:ok, %{cluster: cluster, polling: polling, hosts: hosts}, {:continue, :connect}}
