@@ -40,7 +40,7 @@ defmodule Galaxy.Erlhosts do
   def init(options) do
     case :net_adm.host_file() do
       {:error, _} ->
-        Logger.info("Couldn't find .host.erlang file")
+        Logger.info("Couldn't find .hosts.erlang file")
         :ignore
 
       hosts ->
