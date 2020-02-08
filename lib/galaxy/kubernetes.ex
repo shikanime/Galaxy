@@ -59,7 +59,7 @@ defmodule Galaxy.Kubernetes do
   defp discover_nodes(%{service: service}) do
     case :inet_res.getbyname(to_charlist(service), :srv) do
       {:ok, {:hostent, _name, [], :srv, _lenght, addresses}} ->
-        {:ok, addresses |> Enum.map(&address_to_node/1) |> :net_adm.world_list()}
+        {:ok, addresses |> normalize_worlds() |> :net_adm.world_list()}
 
       {:error, :nxdomain} ->
         Logger.error("Cannot be resolve DNS")
@@ -76,7 +76,10 @@ defmodule Galaxy.Kubernetes do
     cluster.connects(hosts -- [Node.self() | cluster.members()])
   end
 
-  defp address_to_node({_priority, _weight, _port, target}) do
-    List.to_atom(target)
+  defp normalize_worlds(addresses) do
+    Enum.reduce(addresses, [], fn
+      {_priority, _weight, 4369, target}, acc -> [List.to_atom(target) | acc]
+      _, acc -> acc
+    end)
   end
 end
