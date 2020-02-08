@@ -70,24 +70,7 @@ defmodule Galaxy.Kubernetes do
   end
 
   defp sync_cluster(%{cluster: cluster}, {:del, nodes}) do
-    Enum.each(nodes, fn node ->
-      case cluster.connect(node) do
-        true ->
-          Logger.info(["Node ", to_string(node), " joined the cluster"])
-
-        false ->
-          Logger.info(["Node ", to_string(node), " fail to connect the cluster"])
-
-        :ignored ->
-          Logger.info(["Node ", to_string(node), " was not able to connect the cluster"])
-      end
-    end)
-  end
-
-  defp sync_cluster(_, {:ins, nodes}) do
-    Enum.each(nodes, fn node ->
-      Logger.debug(["Node ", to_string(node), " discovered but not sync to the cluster"])
-    end)
+    cluster.connects(nodes)
   end
 
   defp sync_cluster(_, _) do
