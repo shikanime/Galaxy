@@ -60,23 +60,13 @@ defmodule Galaxy.Erlhosts do
     {:noreply, polling_nodes(state)}
   end
 
-  defp polling_nodes(%{cluster: cluster, polling: polling, hosts: hosts} = state) do
-    hosts
-    |> :net_adm.world_list()
-    |> Enum.uniq()
-    |> List.myers_difference(cluster.members())
-    |> Enum.each(&sync_cluster(state, &1))
-
+  defp polling_nodes(%{polling: polling, hosts: hosts} = state) do
+    hosts |> :net_adm.world_list() |> sync_nodes(state)
     Process.send_after(self(), :reconnect, polling)
-
     state
   end
 
-  defp sync_cluster(%{cluster: cluster}, {:del, nodes}) do
-    cluster.connects(nodes)
-  end
-
-  defp sync_cluster(_, _) do
-    :ok
+  defp sync_nodes(hosts, %{cluster: cluster}) do
+    cluster.connects(hosts -- [Node.self() | cluster.members()])
   end
 end

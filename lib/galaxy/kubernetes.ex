@@ -44,15 +44,22 @@ defmodule Galaxy.Kubernetes do
     {:noreply, polling_nodes(state)}
   end
 
-  defp polling_nodes(%{cluster: cluster, polling: polling, service: service} = state) do
+  defp polling_nodes(%{polling: polling} = state) do
+    case discover_nodes(state) do
+      {:ok, nodes} ->
+        sync_nodes(nodes, state)
+        Process.send_after(self(), :reconnect, polling)
+        state
+
+      {:error, reason} ->
+        {:stop, reason, state}
+    end
+  end
+
+  defp discover_nodes(%{service: service}) do
     case :inet_res.getbyname(to_charlist(service), :srv) do
       {:ok, {:hostent, _name, [], :srv, _lenght, addresses}} ->
-        addresses
-        |> Enum.map(fn {_priority, _weight, _port, target} -> List.to_atom(target) end)
-        |> :net_adm.world_list()
-        |> Enum.uniq()
-        |> List.myers_difference(cluster.members())
-        |> Enum.each(&sync_cluster(cluster, &1))
+        {:ok, addresses |> Enum.map(&address_to_node/1) |> :net_adm.world_list()}
 
       {:error, :nxdomain} ->
         Logger.error("Cannot be resolve DNS")
@@ -63,17 +70,13 @@ defmodule Galaxy.Kubernetes do
       {:error, :refused} ->
         Logger.error("DNS respond with unauthorized request")
     end
-
-    Process.send_after(self(), :reconnect, polling)
-
-    state
   end
 
-  defp sync_cluster(%{cluster: cluster}, {:del, nodes}) do
-    cluster.connects(nodes)
+  defp sync_nodes(hosts, %{cluster: cluster}) do
+    cluster.connects(hosts -- [Node.self() | cluster.members()])
   end
 
-  defp sync_cluster(_, _) do
-    :ok
+  defp address_to_node({_priority, _weight, _port, target}) do
+    List.to_atom(target)
   end
 end
