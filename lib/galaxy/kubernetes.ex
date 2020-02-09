@@ -58,17 +58,19 @@ defmodule Galaxy.Kubernetes do
 
   defp discover_nodes(%{service: service}) do
     case :inet_res.getbyname(to_charlist(service), :srv) do
-      {:ok, {:hostent, _name, [], :srv, _lenght, addresses}} ->
+      {:ok, {:hostent, _, _, _, _, addresses}} ->
         {:ok, addresses |> normalize_worlds() |> :net_adm.world_list()}
 
       {:error, :nxdomain} ->
-        Logger.error("Cannot be resolve DNS")
+        Logger.error(["Can't resolve DNS for ", service])
+        {:ok, []}
 
       {:error, :timeout} ->
-        Logger.error("DNS timeout")
+        Logger.error(["DNS timeout for ", service])
+        {:ok, []}
 
-      {:error, :refused} ->
-        Logger.error("DNS respond with unauthorized request")
+      other ->
+        other
     end
   end
 

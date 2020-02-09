@@ -1,4 +1,7 @@
 defmodule Galaxy.Cluster.Erldist do
+  @moduledoc """
+  Native Erlang Distribution interface.
+  """
   @behaviour Galaxy.Cluster
 
   def connects(nodes) do
