@@ -67,6 +67,10 @@ defmodule Galaxy.Erlhosts do
   end
 
   defp sync_nodes(hosts, %{cluster: cluster}) do
-    cluster.connects(hosts -- [Node.self() | cluster.members()])
+    cluster.connects(filter_members(hosts, cluster.members()))
+  end
+
+  defp filter_members(nodes, members) do
+    MapSet.difference(MapSet.new(nodes), MapSet.new([Node.self() | members]))
   end
 end

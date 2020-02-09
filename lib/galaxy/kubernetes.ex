@@ -73,13 +73,17 @@ defmodule Galaxy.Kubernetes do
   end
 
   defp sync_nodes(hosts, %{cluster: cluster}) do
-    cluster.connects(hosts -- [Node.self() | cluster.members()])
+    cluster.connects(filter_members(hosts, cluster.members()))
   end
 
   defp normalize_worlds(addresses) do
     Enum.reduce(addresses, [], fn
-      {_priority, _weight, 4369, target}, acc -> [List.to_atom(target) | acc]
+      {_, _, 4369, target}, acc -> [List.to_atom(target) | acc]
       _, acc -> acc
     end)
+  end
+
+  defp filter_members(nodes, members) do
+    MapSet.difference(MapSet.new(nodes), MapSet.new([Node.self() | members]))
   end
 end
