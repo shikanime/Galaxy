@@ -29,8 +29,9 @@ defmodule Galaxy.Kubernetes do
       service ->
         Logger.info(["Watching ", service, " Kubernetes headless service"])
         cluster = Keyword.get(options, :cluster, Galaxy.Cluster.Erldist)
+        mode = Keyword.get(options, :mode, :srv)
         polling = Keyword.get(options, :polling, @default_polling_interval)
-        {:ok, %{cluster: cluster, polling: polling, service: service}, {:continue, :connect}}
+        {:ok, %{cluster: cluster, polling: polling, service: service, mode: mode}, {:continue, :connect}}
     end
   end
 
@@ -56,8 +57,8 @@ defmodule Galaxy.Kubernetes do
     end
   end
 
-  defp discover_nodes(%{service: service}) do
-    case :inet_res.getbyname(to_charlist(service), :srv) do
+  defp discover_nodes(%{service: service, mode: mode}) do
+    case :inet_res.getbyname(to_charlist(service), mode) do
       {:ok, {:hostent, _, _, _, _, addresses}} ->
         {:ok, addresses |> normalize_worlds() |> :net_adm.world_list()}
 
