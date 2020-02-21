@@ -42,8 +42,8 @@ You have a handful of choices with regards to cluster management out of the box:
 
 - `Galaxy.Erlhost`, which uses the `.hosts.erlang` file to
   determine which hosts to connect to.
-- `Galaxy.Kubernetes`, which uses the Kubernetes Metadata API to query
-  nodes based on a label selector and basename.
+- `Galaxy.Kubernetes`, which uses the Kubernetes Headless Service to query
+  dns based on the `SERVICE_NAME` environment variable.
 
 ## License
 
