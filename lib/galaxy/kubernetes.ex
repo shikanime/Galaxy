@@ -22,7 +22,7 @@ defmodule Galaxy.Kubernetes do
 
   @impl true
   def init(options) do
-    case System.get_env("RELEASE_SERVICE") do
+    case System.get_env("SERVICE_NAME") do
       nil ->
         :ignore
 
