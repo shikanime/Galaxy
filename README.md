@@ -12,7 +12,7 @@ You can find supporting documentation [here](https://hexdocs.pm/galaxy).
 - Automatic cluster formation/healing
 - Choice of multiple clustering strategies out of the box:
   - Standard Distributed Erlang facilities (e.g. `.hosts.erlang`), which supports IP-based or DNS-based names
-  - Kubernetes via its metadata API using via a configurable label selector and
+  - DNS via its metadata API using via a configurable label selector and
     node basename; or alternatively, using DNS.
 - Easy to provide your own custom clustering strategies for your specific environment.
 - Easy to use provide your own distribution plumbing (i.e. something other than
@@ -42,7 +42,7 @@ You have a handful of choices with regards to cluster management out of the box:
 
 - `Galaxy.Erlhost`, which uses the `.hosts.erlang` file to
   determine which hosts to connect to.
-- `Galaxy.Kubernetes`, which uses the Kubernetes Headless Service to query
+- `Galaxy.DNS`, which uses the DNS Headless Service to query
   dns based on the `SERVICE_NAME` environment variable.
 
 ## License

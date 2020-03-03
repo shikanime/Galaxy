@@ -1,6 +1,6 @@
 defmodule Galaxy.Erlhosts do
   @moduledoc """
-  This clustering strategy relies on Erlang's built-in distribution protocol by
+  This topologying strategy relies on Erlang's built-in distribution protocol by
   using a `.hosts.erlang` file (as used by the `:net_adm` module).
 
   Please see [the net_adm docs](http://erlang.org/doc/man/net_adm.html) for more details.
@@ -44,9 +44,9 @@ defmodule Galaxy.Erlhosts do
 
       hosts ->
         Enum.each(hosts, &Logger.info(["Watching ", to_string(&1), " host"]))
-        cluster = Keyword.get(options, :cluster, Galaxy.Cluster.Erldist)
+        topology = Keyword.fetch!(options, :topology)
         polling = Keyword.get(options, :polling, @default_polling_interval)
-        {:ok, %{cluster: cluster, polling: polling, hosts: hosts}, {:continue, :connect}}
+        {:ok, %{topology: topology, polling: polling, hosts: hosts}, {:continue, :connect}}
     end
   end
 
@@ -66,8 +66,8 @@ defmodule Galaxy.Erlhosts do
     state
   end
 
-  defp sync_nodes(hosts, %{cluster: cluster}) do
-    cluster.connects(filter_members(hosts, cluster.members()))
+  defp sync_nodes(hosts, %{topology: topology}) do
+    topology.connects(filter_members(hosts, topology.members()))
   end
 
   defp filter_members(nodes, members) do

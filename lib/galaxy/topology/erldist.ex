@@ -1,8 +1,8 @@
-defmodule Galaxy.Cluster.Erldist do
+defmodule Galaxy.Topology.ErlDist do
   @moduledoc """
   Native Erlang Distribution interface.
   """
-  @behaviour Galaxy.Cluster
+  @behaviour Galaxy.Topology
 
   def connects(nodes) do
     Enum.each(nodes, &Node.connect(&1))
