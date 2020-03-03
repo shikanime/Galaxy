@@ -43,7 +43,7 @@ defmodule Galaxy.MixProject do
 
   defp docs do
     [
-      main: "Galaxy",
+      main: "readme",
       extras: ["README.md"]
     ]
   end
