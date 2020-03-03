@@ -5,7 +5,7 @@ defmodule Galaxy.MixProject do
   def project do
     [
       app: :galaxy,
-      version: "0.3.0",
+      version: "0.3.1",
       name: "Galaxy",
       description: description(),
       package: package(),
