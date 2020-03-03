@@ -30,9 +30,29 @@ end
 
 ## Usage
 
-It is easy to get started using `galaxy`, the best strategy is chosen for you
-based on the orchestration context, define a topology, and then start the module in
-the supervision tree of an application in your Elixir system.
+It is easy to get started using `galaxy`, start the module in the supervision tree
+of an application in your Elixir system. And configure the it using:
+
+```elixir
+# In your config/releases.exs file
+headless_service =
+  System.get_env("SERVICE_NAME") ||
+    raise """
+    environment variable SERVICE_NAME is missing.
+    You can retrieve a headless service using a StatefulSets
+    """
+
+config :cruise, Cruise.Cluster,
+  services: [headless_service],
+  polling: 10_000
+
+# In your application code
+defmodule MyApp.Cluster do
+  use Galaxy.Cluster,
+    otp_app: :my_app,
+    topology: Galaxy.Topology.ErlDist
+end
+```
 
 The following section describes topology configuration in more detail.
 
@@ -40,10 +60,10 @@ The following section describes topology configuration in more detail.
 
 You have a handful of choices with regards to cluster management out of the box:
 
-- `Galaxy.Erlhost`, which uses the `.hosts.erlang` file to
+- `Galaxy.Host`, which uses the `.hosts.erlang` file to
   determine which hosts to connect to.
-- `Galaxy.DNS`, which uses the DNS Headless Service to query
-  dns based on the `SERVICE_NAME` environment variable.
+- `Galaxy.DNS`, which query the DNS server based on
+  the `services` configuration.
 
 ## License
 

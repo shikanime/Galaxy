@@ -1,4 +1,4 @@
-defmodule Galaxy.Erlhosts do
+defmodule Galaxy.Host do
   @moduledoc """
   This topologying strategy relies on Erlang's built-in distribution protocol by
   using a `.hosts.erlang` file (as used by the `:net_adm` module).

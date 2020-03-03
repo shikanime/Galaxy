@@ -18,7 +18,7 @@ defmodule Galaxy.Cluster.Supervisor do
     services = Keyword.get(config, :services, [])
 
     children = [
-      {Galaxy.Erlhosts, [topology: topology, polling: polling]},
+      {Galaxy.Host, [topology: topology, polling: polling]},
       {Galaxy.DNS, [topology: topology, services: services, mode: mode, polling: polling]},
     ]
 
