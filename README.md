@@ -24,7 +24,7 @@ You can find supporting documentation [here](https://hexdocs.pm/galaxy).
 
 ```elixir
 defp deps do
-  [{:galaxy, github: "shikanime/galaxy"}]
+  [{:galaxy, github: "~> 0.3"}]
 end
 ```
 
