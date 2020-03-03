@@ -10,8 +10,7 @@ defmodule Galaxy.Cluster do
     quote bind_quoted: [opts: opts] do
       @behaviour Galaxy.Cluster
 
-      otp_app = Keyword.fetch!(opts, :otp_app)
-      topology = Keyword.fetch!(opts, :topology)
+      {otp_app, topology} = Galaxy.Cluster.Supervisor.compile_config(__MODULE__, opts)
 
       @otp_app otp_app
       @topology topology
@@ -58,6 +57,6 @@ defmodule Galaxy.Cluster do
   application environment. It must return `{:ok, keyword}` with the updated
   list of configuration or `:ignore` (only in the `:supervisor` case).
   """
-  @callback init(context :: :supervisor | :runtime, config :: Keyword.t()) ::
+  @callback init(:supervisor, config :: Keyword.t()) ::
               {:ok, Keyword.t()} | :ignore
 end
