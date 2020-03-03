@@ -1,10 +1,11 @@
 defmodule Galaxy.MixProject do
+  @moduledoc false
   use Mix.Project
 
   def project do
     [
       app: :galaxy,
-      version: "0.1.0",
+      version: "0.3.0",
       name: "Galaxy",
       description: description(),
       package: package(),

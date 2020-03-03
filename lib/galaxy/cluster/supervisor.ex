@@ -1,7 +1,7 @@
 defmodule Galaxy.Cluster.Supervisor do
   use Supervisor
 
-  @defaults [polling: 2000, refresh: 5000, mode: :srv]
+  @defaults [polling: 5000, mode: :srv]
 
   def start_link(cluster, otp_app, topology, opts \\ []) do
     Supervisor.start_link(__MODULE__, {cluster, otp_app, topology, opts}, name: __MODULE__)
@@ -14,12 +14,10 @@ defmodule Galaxy.Cluster.Supervisor do
 
     mode = Keyword.fetch!(config, :mode)
     polling = Keyword.fetch!(config, :polling)
-    refresh = Keyword.fetch!(config, :refresh)
     services = Keyword.get(config, :services, [])
-    hosts = Keyword.get(config, :hosts, [])
 
     children = [
-      {Galaxy.Erlhosts, [topology: topology, hosts: hosts, refresh: refresh]},
+      {Galaxy.Erlhosts, [topology: topology, polling: polling]},
       {Galaxy.DNS, [topology: topology, services: services, mode: mode, polling: polling]},
     ]
 
