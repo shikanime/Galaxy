@@ -1,4 +1,5 @@
 defmodule Galaxy.Cluster.Supervisor do
+  @moduledoc false
   use Supervisor
 
   @defaults [polling: 5000, mode: :srv]
