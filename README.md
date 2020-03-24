@@ -42,15 +42,10 @@ headless_service =
     You can retrieve a headless service using a StatefulSets
     """
 
-config :cruise, Cruise.Cluster,
+config :galaxy,
+  topology: :distribution,
   services: [headless_service],
   polling: 10_000
-
-# In your application code
-defmodule MyApp.Cluster do
-  use Galaxy.Cluster,
-    otp_app: :my_app,
-    topology: Galaxy.Topology.ErlDist
 end
 ```
 

@@ -1,62 +1,45 @@
 defmodule Galaxy.Cluster do
-  @moduledoc """
-  Defines a cluster.
+  @moduledoc false
+  use Supervisor
+
+  @defaults [topology: :dist, polling: 5000, mode: :srv]
+
+  def start_link(options) do
+    Supervisor.start_link(__MODULE__, options, name: __MODULE__)
+  end
+
+  @doc """
+  Retrieves the runtime configuration.
   """
+  def runtime_config(options) do
+    config = Application.get_all_env(:galaxy)
+    config = @defaults |> Keyword.merge(config) |> Keyword.merge(options)
+    {:ok, config}
+  end
 
-  @type t :: module
+  @impl true
+  def init(options) do
+    case runtime_config(options) do
+      {:ok, options} ->
+        topology = Keyword.fetch!(options, :topology)
+        mode = Keyword.fetch!(options, :mode)
+        polling = Keyword.fetch!(options, :polling)
+        services = Keyword.get(options, :services, [])
 
-  @doc false
-  defmacro __using__(opts) do
-    quote bind_quoted: [opts: opts] do
-      @behaviour Galaxy.Cluster
+        topology = translate_topology(topology)
 
-      {otp_app, topology} = Galaxy.Cluster.Supervisor.compile_config(__MODULE__, opts)
+        children = [
+          {Galaxy.Host, [topology: topology, polling: polling]},
+          {Galaxy.DNS, [topology: topology, services: services, mode: mode, polling: polling]},
+        ]
 
-      @otp_app otp_app
-      @topology topology
+        Supervisor.init(children, strategy: :one_for_one, max_restarts: 0)
 
-      def __topology__ do
-        @topology
-      end
-
-      def child_spec(opts) do
-        %{
-          id: __MODULE__,
-          start: {__MODULE__, :start_link, [opts]},
-          type: :supervisor
-        }
-      end
-
-      def start_link(opts \\ []) do
-        Galaxy.Cluster.Supervisor.start_link(__MODULE__, @otp_app, @topology, opts)
-      end
-
-      def connects(nodes) do
-        @topology.connects(nodes)
-      end
-
-      def disconnects(nodes) do
-        @topology.disconnects(nodes)
-      end
-
-      def members do
-        @topology.members()
-      end
+      :ignore ->
+        :ignore
     end
   end
 
-  @optional_callbacks init: 2
-
-  @doc """
-  A callback executed when the repo starts or when configuration is read.
-  The first argument is the context the callback is being invoked. If it
-  is called because the Repo supervisor is starting, it will be `:supervisor`.
-  It will be `:runtime` if it is called for reading configuration without
-  actually starting a process.
-  The second argument is the repository configuration as stored in the
-  application environment. It must return `{:ok, keyword}` with the updated
-  list of configuration or `:ignore` (only in the `:supervisor` case).
-  """
-  @callback init(:supervisor, config :: Keyword.t()) ::
-              {:ok, Keyword.t()} | :ignore
+  defp translate_topology(:dist), do: Galaxy.Topology.Dist
+  defp translate_topology(topology), do: topology
 end

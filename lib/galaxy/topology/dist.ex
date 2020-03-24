@@ -1,4 +1,4 @@
-defmodule Galaxy.Topology.ErlDist do
+defmodule Galaxy.Topology.Dist do
   @moduledoc """
   Native Erlang Distribution interface.
   """

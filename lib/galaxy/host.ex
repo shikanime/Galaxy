@@ -32,8 +32,7 @@ defmodule Galaxy.Host do
   @default_polling_interval 5000
 
   def start_link(options) do
-    {sup_opts, start_opts} = Keyword.split(options, [:name])
-    GenServer.start_link(__MODULE__, start_opts, sup_opts)
+    GenServer.start_link(__MODULE__, options, name: __MODULE__)
   end
 
   @impl true
