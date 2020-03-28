@@ -43,7 +43,7 @@ headless_service =
     """
 
 config :galaxy,
-  topology: :distribution,
+  topology: :dist,
   services: [headless_service],
   polling: 10_000
 end
