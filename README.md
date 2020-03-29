@@ -24,7 +24,7 @@ You can find supporting documentation [here](https://hexdocs.pm/galaxy).
 
 ```elixir
 defp deps do
-  [{:galaxy, github: "~> 0.4"}]
+  [{:galaxy, github: "~> 0.3"}]
 end
 ```
 
@@ -43,7 +43,7 @@ headless_service =
     """
 
 config :galaxy,
-  topology: :dist,
+  topology: :distribution,
   services: [headless_service],
   polling: 10_000
 end
