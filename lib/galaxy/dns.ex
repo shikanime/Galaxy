@@ -13,8 +13,6 @@ defmodule Galaxy.DNS do
   use GenServer
   require Logger
 
-  @default_polling_interval 5000
-
   def start_link(options) do
     GenServer.start_link(__MODULE__, options, name: __MODULE__)
   end
@@ -22,41 +20,50 @@ defmodule Galaxy.DNS do
   @impl true
   def init(options) do
     services = Keyword.fetch!(options, :services)
-    Enum.each(services, &Logger.info(["Watching ", to_string(&1), " host"]))
     topology = Keyword.fetch!(options, :topology)
-    mode = Keyword.fetch!(options, :mode)
-    polling = Keyword.get(options, :polling, @default_polling_interval)
-    {:ok, %{topology: topology, polling: polling, services: services, mode: mode}, {:continue, :connect}}
+    dns_mode = Keyword.fetch!(options, :dns_mode)
+    epmd_port = Keyword.fetch!(options, :epmd_port)
+    polling_interval = Keyword.fetch!(options, :polling_interval)
+
+    state = %{
+      topology: topology,
+      polling_interval: polling_interval,
+      services: services,
+      epmd_port: epmd_port,
+      dns_mode: dns_mode
+    }
+
+    send(self(), :poll)
+
+    {:ok, state}
   end
 
   @impl true
-  def handle_continue(:connect, state) do
-    {:noreply, polling_nodes(state)}
+  def handle_info(:poll, state) do
+    state.services
+    |> resolve_service_nodes(state.dns_mode)
+    |> filter_epmdless_services(state.epmd_port)
+    |> normalize_node_hosts()
+    |> :net_adm.world_list()
+    |> state.topology.connect_nodes()
+
+    Process.send_after(self(), :poll, state.polling_interval)
+
+    {:noreply, state}
   end
 
-  @impl true
-  def handle_info(:reconnect, state) do
-    {:noreply, polling_nodes(state)}
-  end
-
-  defp polling_nodes(%{polling: polling} = state) do
-    discover_nodes(state) |> sync_nodes(state)
-    Process.send_after(self(), :reconnect, polling)
-    state
-  end
-
-  defp discover_nodes(%{services: services, mode: mode}) do
-    Enum.flat_map(services, fn host ->
-      case :inet_res.getbyname(to_charlist(host), mode) do
-        {:ok, {:hostent, _, _, _, _, addresses}} ->
-          addresses |> normalize_addresses() |> :net_adm.world_list()
+  defp resolve_service_nodes(services, dns_mode) do
+    Enum.flat_map(services, fn service ->
+      case :inet_res.getbyname(service |> to_charlist(), dns_mode) do
+        {:ok, {:hostent, _, _, _, _, hosts}} ->
+          hosts
 
         {:error, :nxdomain} ->
-          Logger.error(["Can't resolve DNS for ", host])
+          Logger.error(["Can't resolve DNS for ", service])
           []
 
         {:error, :timeout} ->
-          Logger.error(["DNS timeout for ", host])
+          Logger.error(["DNS timeout for ", service])
           []
 
         _ ->
@@ -65,18 +72,9 @@ defmodule Galaxy.DNS do
     end)
   end
 
-  defp sync_nodes(services, %{topology: topology}) do
-    topology.connects(filter_members(services, topology.members()))
-  end
+  defp filter_epmdless_services(services, port),
+    do: Enum.filter(services, &match?({_, _, ^port, _}, &1))
 
-  defp normalize_addresses(addresses) do
-    Enum.reduce(addresses, [], fn
-      {_, _, 4369, target}, acc -> [List.to_atom(target) | acc]
-      _, acc -> acc
-    end)
-  end
-
-  defp filter_members(nodes, members) do
-    MapSet.difference(MapSet.new(nodes), MapSet.new([Node.self() | members]))
-  end
+  defp normalize_node_hosts(hosts),
+    do: Enum.map(hosts, &(elem(&1, 3) |> List.to_atom()))
 end

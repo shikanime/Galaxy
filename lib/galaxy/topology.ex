@@ -3,9 +3,9 @@ defmodule Galaxy.Topology do
   Topology interface for cluster formation.
   """
 
-  @callback connects(list(node)) :: :ok
+  @callback connect_nodes([node]) :: :ok
 
-  @callback disconnects(list(node)) :: :ok
+  @callback disconnect_nodes([node]) :: :ok
 
-  @callback members() :: list(node)
+  @callback members() :: [node]
 end

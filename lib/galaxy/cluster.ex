@@ -2,44 +2,40 @@ defmodule Galaxy.Cluster do
   @moduledoc false
   use Supervisor
 
-  @defaults [topology: :dist, polling: 5000, mode: :srv]
+  @defaults [topology: :erl_dist, polling_interval: 5000, dns_mode: :srv]
 
   def start_link(options) do
     Supervisor.start_link(__MODULE__, options, name: __MODULE__)
   end
 
-  @doc """
-  Retrieves the runtime configuration.
-  """
-  def runtime_config(options) do
-    config = Application.get_all_env(:galaxy)
-    config = @defaults |> Keyword.merge(config) |> Keyword.merge(options)
-    {:ok, config}
-  end
-
   @impl true
   def init(options) do
-    case runtime_config(options) do
-      {:ok, options} ->
-        topology = Keyword.fetch!(options, :topology)
-        mode = Keyword.fetch!(options, :mode)
-        polling = Keyword.fetch!(options, :polling)
-        services = Keyword.get(options, :services, [])
+    config = Application.get_all_env(:galaxy)
+    config = @defaults |> Keyword.merge(config) |> Keyword.merge(options)
 
-        topology = translate_topology(topology)
+    services = Keyword.get(config, :services, [])
+    dns_mode = Keyword.fetch!(config, :dns_mode)
+    polling_interval = Keyword.fetch!(config, :polling_interval)
+    topology = Keyword.fetch!(config, :topology) |> translate_topology()
 
-        children = [
-          {Galaxy.Host, [topology: topology, polling: polling]},
-          {Galaxy.DNS, [topology: topology, services: services, mode: mode, polling: polling]},
-        ]
+    children = [
+      {Galaxy.Host,
+       [
+         polling_interval: polling_interval,
+         topology: topology
+       ]},
+      {Galaxy.DNS,
+       [
+         services: services,
+         dns_mode: dns_mode,
+         polling_interval: polling_interval,
+         topology: topology
+       ]}
+    ]
 
-        Supervisor.init(children, strategy: :one_for_one, max_restarts: 0)
-
-      :ignore ->
-        :ignore
-    end
+    Supervisor.init(children, strategy: :one_for_one, max_restarts: 0)
   end
 
-  defp translate_topology(:dist), do: Galaxy.Topology.Dist
+  defp translate_topology(:erl_dist), do: Galaxy.Topology.ErlDist
   defp translate_topology(topology), do: topology
 end

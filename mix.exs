@@ -3,19 +3,19 @@ defmodule Galaxy.MixProject do
 
   use Mix.Project
 
-  @version "0.4.0"
+  @version "0.5.0"
 
   def project do
     [
       app: :galaxy,
-      version:  @version,
+      version: @version,
       name: "Galaxy",
       package: package(),
       elixir: "~> 1.10",
       docs: docs(),
       deps: deps(),
       package: package(),
-      description: "Seamless node clustering for Elixir",
+      description: "Seamless node clustering for Elixir"
     ]
   end
 
@@ -28,7 +28,9 @@ defmodule Galaxy.MixProject do
 
   defp deps do
     [
-      {:ex_doc, "~> 0.21", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.22", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.0", only: :dev, runtime: false},
+      {:credo, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
 
@@ -45,7 +47,7 @@ defmodule Galaxy.MixProject do
     [
       main: "Galaxy",
       source_ref: "v#{@version}",
-      source_url: "https://github.com/Shikanime/Galaxy",
+      source_url: "https://github.com/Shikanime/Galaxy"
     ]
   end
 end

@@ -29,8 +29,6 @@ defmodule Galaxy.Host do
   use GenServer
   require Logger
 
-  @default_polling_interval 5000
-
   def start_link(options) do
     GenServer.start_link(__MODULE__, options, name: __MODULE__)
   end
@@ -42,34 +40,29 @@ defmodule Galaxy.Host do
         :ignore
 
       hosts ->
-        Enum.each(hosts, &Logger.info(["Watching ", to_string(&1), " host"]))
         topology = Keyword.fetch!(options, :topology)
-        polling = Keyword.get(options, :polling, @default_polling_interval)
-        {:ok, %{topology: topology, polling: polling, hosts: hosts}, {:continue, :connect}}
+        polling_interval = Keyword.fetch!(options, :polling_interval)
+
+        state = %{
+          topology: topology,
+          polling_interval: polling_interval,
+          hosts: hosts
+        }
+
+        send(self(), :poll)
+
+        {:ok, state}
     end
   end
 
   @impl true
-  def handle_continue(:connect, state) do
-    {:noreply, polling_nodes(state)}
-  end
+  def handle_info(:poll, state) do
+    state.hosts
+    |> :net_adm.world_list()
+    |> state.topology.connect_nodes()
 
-  @impl true
-  def handle_info(:reconnect, state) do
-    {:noreply, polling_nodes(state)}
-  end
+    Process.send_after(self(), :poll, state.polling_interval)
 
-  defp polling_nodes(%{polling: polling, hosts: hosts} = state) do
-    hosts |> :net_adm.world_list() |> sync_nodes(state)
-    Process.send_after(self(), :reconnect, polling)
-    state
-  end
-
-  defp sync_nodes(hosts, %{topology: topology}) do
-    topology.connects(filter_members(hosts, topology.members()))
-  end
-
-  defp filter_members(nodes, members) do
-    MapSet.difference(MapSet.new(nodes), MapSet.new([Node.self() | members]))
+    {:noreply, state}
   end
 end

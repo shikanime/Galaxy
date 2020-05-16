@@ -8,7 +8,6 @@ defmodule Galaxy.Application do
       {Galaxy.Cluster, []}
     ]
 
-    opts = [strategy: :one_for_one, name: Galaxy.Supervisor]
-    Supervisor.start_link(children, opts)
+    Supervisor.start_link(children, strategy: :one_for_one, name: Galaxy.Supervisor)
   end
 end
