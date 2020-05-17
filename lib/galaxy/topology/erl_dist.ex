@@ -5,9 +5,7 @@ defmodule Galaxy.Topology.ErlDist do
   @behaviour Galaxy.Topology
 
   def connect_nodes(nodes) do
-    knowns = [Node.self() | members()]
-    news = nodes -- knowns
-    Enum.each(news, &Node.connect(&1))
+    Enum.each(nodes, &Node.connect(&1))
   end
 
   def disconnect_nodes(nodes),

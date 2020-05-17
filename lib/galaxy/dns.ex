@@ -45,16 +45,22 @@ defmodule Galaxy.DNS do
 
   @impl true
   def handle_info(:poll, state) do
-    state.services
-    |> resolve_service_nodes(state.dns_mode)
-    |> filter_epmdless_services(state.epmd_port)
-    |> normalize_node_hosts()
-    |> :net_adm.world_list()
-    |> state.topology.connect_nodes()
+    knowns_hosts = [Node.self() | state.topology.members()]
+    discovered_hosts = poll_services_hosts(state.services, state.epmd_port, state.dns_mode)
+    new_hosts = discovered_hosts -- knowns_hosts
+    state.topology.connect_nodes(new_hosts)
 
     Process.send_after(self(), :poll, state.polling_interval)
 
     {:noreply, state}
+  end
+
+  defp poll_services_hosts(services, port, dns_mode) do
+    services
+    |> resolve_service_nodes(dns_mode)
+    |> filter_epmdless_services(port)
+    |> normalize_node_hosts()
+    |> :net_adm.world_list()
   end
 
   defp resolve_service_nodes(services, dns_mode) do
