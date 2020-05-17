@@ -13,28 +13,26 @@ defmodule Galaxy.DNS do
   use GenServer
   require Logger
 
+  @default_polling_interval 5000
+
   def start_link(options) do
     GenServer.start_link(__MODULE__, options, name: __MODULE__)
   end
 
   @impl true
   def init(options) do
-    case Keyword.fetch!(options, :services) do
+    case Keyword.get(options, :services) do
       [] ->
         :ignore
 
       services ->
         topology = Keyword.fetch!(options, :topology)
-        polling_interval = Keyword.fetch!(options, :polling_interval)
-        dns_mode = Keyword.get(options, :dns_mode, :srv)
-        epmd_port = Keyword.get(options, :epmd_port, 4369)
+        polling_interval = Keyword.get(options, :polling_interval, @default_polling_interval)
 
         state = %{
           topology: topology,
           polling_interval: polling_interval,
-          services: services,
-          epmd_port: epmd_port,
-          dns_mode: dns_mode
+          services: services
         }
 
         send(self(), :poll)
@@ -46,7 +44,7 @@ defmodule Galaxy.DNS do
   @impl true
   def handle_info(:poll, state) do
     knowns_hosts = [Node.self() | state.topology.members()]
-    discovered_hosts = poll_services_hosts(state.services, state.epmd_port, state.dns_mode)
+    discovered_hosts = poll_services_hosts(state.services)
     new_hosts = discovered_hosts -- knowns_hosts
     state.topology.connect_nodes(new_hosts)
 
@@ -55,18 +53,17 @@ defmodule Galaxy.DNS do
     {:noreply, state}
   end
 
-  defp poll_services_hosts(services, port, dns_mode) do
+  defp poll_services_hosts(services) do
     services
-    |> resolve_service_nodes(dns_mode)
-    |> filter_epmdless_services(port)
+    |> resolve_service_nodes()
     |> normalize_node_hosts()
     |> :net_adm.world_list()
   end
 
-  defp resolve_service_nodes(services, dns_mode) do
+  defp resolve_service_nodes(services) do
     Enum.flat_map(services, fn service ->
-      case :inet_res.getbyname(service |> to_charlist(), dns_mode) do
-        {:ok, {:hostent, _, _, _, _, hosts}} ->
+      case :inet_res.getbyname(service |> to_charlist(), :a) do
+        {:ok, {:hostent, _, [], :inet, _, hosts}} ->
           hosts
 
         {:error, :nxdomain} ->
@@ -82,9 +79,6 @@ defmodule Galaxy.DNS do
       end
     end)
   end
-
-  defp filter_epmdless_services(services, port),
-    do: Enum.filter(services, &match?({_, _, ^port, _}, &1))
 
   defp normalize_node_hosts(hosts),
     do: Enum.map(hosts, &(elem(&1, 3) |> List.to_atom()))
