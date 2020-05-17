@@ -19,23 +19,28 @@ defmodule Galaxy.DNS do
 
   @impl true
   def init(options) do
-    services = Keyword.fetch!(options, :services)
-    topology = Keyword.fetch!(options, :topology)
-    dns_mode = Keyword.fetch!(options, :dns_mode)
-    epmd_port = Keyword.fetch!(options, :epmd_port)
-    polling_interval = Keyword.fetch!(options, :polling_interval)
+    case Keyword.fetch!(options, :services) do
+      [] ->
+        :ignore
 
-    state = %{
-      topology: topology,
-      polling_interval: polling_interval,
-      services: services,
-      epmd_port: epmd_port,
-      dns_mode: dns_mode
-    }
+      services ->
+        topology = Keyword.fetch!(options, :topology)
+        dns_mode = Keyword.fetch!(options, :dns_mode)
+        epmd_port = Keyword.fetch!(options, :epmd_port)
+        polling_interval = Keyword.fetch!(options, :polling_interval)
 
-    send(self(), :poll)
+        state = %{
+          topology: topology,
+          polling_interval: polling_interval,
+          services: services,
+          epmd_port: epmd_port,
+          dns_mode: dns_mode
+        }
 
-    {:ok, state}
+        send(self(), :poll)
+
+        {:ok, state}
+    end
   end
 
   @impl true
