@@ -25,9 +25,9 @@ defmodule Galaxy.DNS do
 
       services ->
         topology = Keyword.fetch!(options, :topology)
-        dns_mode = Keyword.fetch!(options, :dns_mode)
-        epmd_port = Keyword.fetch!(options, :epmd_port)
         polling_interval = Keyword.fetch!(options, :polling_interval)
+        dns_mode = Keyword.get(options, :dns_mode, :srv)
+        epmd_port = Keyword.get(options, :epmd_port, 4369)
 
         state = %{
           topology: topology,
