@@ -48,6 +48,14 @@ defmodule Galaxy.Cluster do
     delivery_mode: [
       type: {:one_of, [:broadcast, :multicast]},
       default: :multicast
+    ],
+    secret_key_base: [
+      type: :string,
+      required: true
+    ],
+    force_security: [
+      type: :boolean,
+      default: false
     ]
   ]
 
