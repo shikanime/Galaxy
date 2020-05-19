@@ -15,6 +15,10 @@ defmodule Galaxy.Cluster do
       type: :pos_integer,
       default: 5000
     ],
+    epmd_port: [
+      type: :pos_integer,
+      default: 4369
+    ],
     gossip: [
       type: :boolean,
       default: false
@@ -73,11 +77,19 @@ defmodule Galaxy.Cluster do
 
     topology = Keyword.fetch!(config, :topology)
     polling_interval = Keyword.fetch!(config, :polling_interval)
+    hosts = Keyword.fetch!(config, :hosts)
+    epmd_port = Keyword.fetch!(config, :epmd_port)
 
     children =
       [
         {Galaxy.Host, [topology: topology]},
-        {Galaxy.DNS, [topology: topology, polling_interval: polling_interval]}
+        {Galaxy.DNS,
+         [
+           topology: topology,
+           hosts: hosts,
+           epmd_port: epmd_port,
+           polling_interval: polling_interval
+         ]}
       ] ++ gossip_child_spec(config)
 
     Supervisor.init(children, strategy: :one_for_one, max_restarts: 0)

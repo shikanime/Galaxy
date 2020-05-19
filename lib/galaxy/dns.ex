@@ -19,17 +19,17 @@ defmodule Galaxy.DNS do
 
   @impl true
   def init(options) do
-    if services = Keyword.get(options, :services) do
+    if hosts = Keyword.get(options, :hosts) do
       topology = Keyword.fetch!(options, :topology)
+      epmd_port = Keyword.fetch!(options, :epmd_port)
       polling_interval = Keyword.fetch!(options, :polling_interval)
 
-      state =
-        %{
-          topology: topology,
-          polling_interval: polling_interval,
-          services: services
-        }
-        |> IO.inspect()
+      state = %{
+        topology: topology,
+        hosts: hosts,
+        epmd_port: epmd_port,
+        polling_interval: polling_interval
+      }
 
       send(self(), :poll)
 
@@ -42,7 +42,7 @@ defmodule Galaxy.DNS do
   @impl true
   def handle_info(:poll, state) do
     knowns_hosts = [node() | state.topology.members()]
-    discovered_hosts = poll_services_hosts(state.services)
+    discovered_hosts = poll_services_hosts(state.hosts, state.epmd_port)
     new_hosts = discovered_hosts -- knowns_hosts
     state.topology.connect_nodes(new_hosts)
 
@@ -53,16 +53,17 @@ defmodule Galaxy.DNS do
     {:noreply, state}
   end
 
-  defp poll_services_hosts(services) do
-    services
+  defp poll_services_hosts(hosts, port) do
+    hosts
     |> Enum.flat_map(&resolve_service_nodes/1)
+    |> Enum.filter(&filter_epmd_hosts(&1, port))
     |> Enum.map(&normalize_node_hosts/1)
     |> :net_adm.world_list()
   end
 
   defp resolve_service_nodes(service) do
     case :inet_res.getbyname(service |> to_charlist(), :srv) do
-      {:ok, {:hostent, _, [], :inet, _, hosts}} ->
+      {:ok, {:hostent, _, _, _, _, hosts}} ->
         hosts
 
       {:error, :nxdomain} ->
@@ -77,6 +78,9 @@ defmodule Galaxy.DNS do
         []
     end
   end
+
+  defp filter_epmd_hosts(host, port),
+    do: match?({_, _, ^port, _}, host)
 
   defp normalize_node_hosts({_, _, _, host}),
     do: host |> List.to_atom()
