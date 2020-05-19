@@ -3,7 +3,7 @@ defmodule Galaxy.MixProject do
 
   use Mix.Project
 
-  @version "0.5.0"
+  @version "0.6.0"
 
   def project do
     [
@@ -28,6 +28,7 @@ defmodule Galaxy.MixProject do
 
   defp deps do
     [
+      {:nimble_options, "~> 0.2"},
       {:ex_doc, "~> 0.22", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0", only: :dev, runtime: false},
       {:credo, "~> 1.4", only: [:dev, :test], runtime: false}

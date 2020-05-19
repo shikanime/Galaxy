@@ -13,37 +13,33 @@ defmodule Galaxy.DNS do
   use GenServer
   require Logger
 
-  @default_polling_interval 5000
-
   def start_link(options) do
     GenServer.start_link(__MODULE__, options, name: __MODULE__)
   end
 
   @impl true
   def init(options) do
-    case Keyword.get(options, :services) do
-      [] ->
-        :ignore
+    if services = Keyword.get(options, :services) do
+      topology = Keyword.fetch!(options, :topology)
+      polling_interval = Keyword.fetch!(options, :polling_interval)
 
-      services ->
-        topology = Keyword.fetch!(options, :topology)
-        polling_interval = Keyword.get(options, :polling_interval, @default_polling_interval)
+      state = %{
+        topology: topology,
+        polling_interval: polling_interval,
+        services: services
+      }
 
-        state = %{
-          topology: topology,
-          polling_interval: polling_interval,
-          services: services
-        }
+      send(self(), :poll)
 
-        send(self(), :poll)
-
-        {:ok, state}
+      {:ok, state}
+    else
+      :ignore
     end
   end
 
   @impl true
   def handle_info(:poll, state) do
-    knowns_hosts = [Node.self() | state.topology.members()]
+    knowns_hosts = [node() | state.topology.members()]
     discovered_hosts = poll_services_hosts(state.services)
     new_hosts = discovered_hosts -- knowns_hosts
     state.topology.connect_nodes(new_hosts)
@@ -55,31 +51,29 @@ defmodule Galaxy.DNS do
 
   defp poll_services_hosts(services) do
     services
-    |> resolve_service_nodes()
-    |> normalize_node_hosts()
+    |> Enum.flat_map(&resolve_service_nodes/1)
+    |> Enum.map(&normalize_node_hosts/1)
     |> :net_adm.world_list()
   end
 
-  defp resolve_service_nodes(services) do
-    Enum.flat_map(services, fn service ->
-      case :inet_res.getbyname(service |> to_charlist(), :a) do
-        {:ok, {:hostent, _, [], :inet, _, hosts}} ->
-          hosts
+  defp resolve_service_nodes(service) do
+    case :inet_res.getbyname(service |> to_charlist(), :a) do
+      {:ok, {:hostent, _, [], :inet, _, hosts}} ->
+        hosts
 
-        {:error, :nxdomain} ->
-          Logger.error(["Can't resolve DNS for ", service])
-          []
+      {:error, :nxdomain} ->
+        Logger.error(["Can't resolve DNS for ", service])
+        []
 
-        {:error, :timeout} ->
-          Logger.error(["DNS timeout for ", service])
-          []
+      {:error, :timeout} ->
+        Logger.error(["DNS timeout for ", service])
+        []
 
-        _ ->
-          []
-      end
-    end)
+      _ ->
+        []
+    end
   end
 
-  defp normalize_node_hosts(hosts),
-    do: Enum.map(hosts, &(elem(&1, 3) |> List.to_atom()))
+  defp normalize_node_hosts({_, _, _, host}),
+    do: host |> List.to_atom()
 end

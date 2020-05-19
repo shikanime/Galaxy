@@ -9,7 +9,7 @@ You can find supporting documentation [here](https://hexdocs.pm/galaxy).
 
 ```elixir
 defp deps do
-  [{:galaxy, "~> 0.5"}]
+  [{:galaxy, "~> 0.6"}]
 end
 ```
 
@@ -29,8 +29,12 @@ headless_service =
 
 config :galaxy,
   topology: :erl_dist,
-  services: [headless_service],
-  polling_interval: 10_000
+  hosts: [headless_service],
+  polling_interval: 10_000,
+  gossip: true,
+  gossip_opts: [
+    delivery_mode: :multicast
+  ]
 end
 ```
 
