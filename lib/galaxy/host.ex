@@ -57,9 +57,12 @@ defmodule Galaxy.Host do
 
   @impl true
   def handle_info(:poll, state) do
-    state.hosts
-    |> :net_adm.world_list()
-    |> state.topology.connect_nodes()
+    knowns_hosts = state.topology.members()
+    registered_hosts = :net_adm.world_list(state.hosts)
+    unconnected_hosts = registered_hosts -- knowns_hosts
+    state.topology.connect_nodes(unconnected_hosts)
+
+    Enum.each(unconnected_hosts, &Logger.debug(["Host reconnected ", &1, " node"]))
 
     Process.send_after(self(), :poll, state.polling_interval)
 

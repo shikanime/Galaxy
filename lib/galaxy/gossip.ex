@@ -135,16 +135,20 @@ defmodule Galaxy.Gossip do
       name
       |> String.to_atom()
       |> maybe_connect_node(state)
+    else
+      Logger.debug(["Gossip refused unsecure node ", name, " to connect"])
     end
 
     {:noreply, state}
   end
 
   defp handle_heartbeat({:unsafe, data}, state) do
+    name = unserialize_heartbeat_payload(data)
+
     unless state.force_security do
-      data
-      |> unserialize_heartbeat_payload()
-      |> maybe_connect_node(state)
+      maybe_connect_node(name, state)
+    else
+      Logger.debug(["Gossip refused unsecure node ", name, " to connect"])
     end
 
     {:noreply, state}
@@ -188,6 +192,7 @@ defmodule Galaxy.Gossip do
   defp maybe_connect_node(name, state)
        when name != node() and is_atom(name) do
     state.topology.connect_nodes([name])
+    Logger.debug(["Gossip connected ", name, " node"])
     :ok
   end
 
