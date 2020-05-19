@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-kubernetes-headless
+spec:
+  ports:
+    - port: 4369
+      name: epmd
+      targetPort: epmd
+  selector:
+    app: hello-kubernetes
+  clusterIP: None

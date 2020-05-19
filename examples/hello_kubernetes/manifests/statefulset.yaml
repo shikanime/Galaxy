@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: hello-kubernetes
+spec:
+  selector:
+    matchLabels:
+      app: hello-kubernetes
+  serviceName: "hello-kubernetes-headless"
+  replicas: 3
+  podManagementPolicy: Parallel
+  template:
+    metadata:
+      name: hello-kubernetes
+      labels:
+        app: hello-kubernetes
+    spec:
+      containers:
+        - name: hello-kubernetes
+          image: shikanime/hello-kubernetes@sha256:5bfd148d9ea25c169d1352749cfb66fb2f84dfa8a170fbf386bab96699bfe9d4
+          command:
+            - hello_kubernetes
+            - start
+            - -kernel inet_dist_listen_min 49200
+            - -kernel inet_dist_listen_max 49200
+          ports:
+            - containerPort: 4369
+              name: epmd
+            - containerPort: 49200
+              name: dist
+          env:
+            - name: SERVICE_NAME
+              value: hello-kubernetes-headless
+            - name: RELEASE_DISTRIBUTION
+              value: name
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+  volumeClaimTemplates: []
