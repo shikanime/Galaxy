@@ -75,21 +75,13 @@ defmodule Galaxy.Cluster do
       |> NimbleOptions.validate!(@config_schema)
       |> Keyword.update!(:topology, &translate_topology/1)
 
-    topology = Keyword.fetch!(config, :topology)
-    polling_interval = Keyword.fetch!(config, :polling_interval)
-    hosts = Keyword.fetch!(config, :hosts)
-    epmd_port = Keyword.fetch!(config, :epmd_port)
+    host_options = Keyword.take(config, [:topology])
+    dns_options = Keyword.take(config, [:topology, :hosts, :epmd_port, :polling_interval])
 
     children =
       [
-        {Galaxy.Host, [topology: topology]},
-        {Galaxy.DNS,
-         [
-           topology: topology,
-           hosts: hosts,
-           epmd_port: epmd_port,
-           polling_interval: polling_interval
-         ]}
+        {Galaxy.Host, host_options},
+        {Galaxy.DNS, dns_options}
       ] ++ gossip_child_spec(config)
 
     Supervisor.init(children, strategy: :one_for_one, max_restarts: 0)
