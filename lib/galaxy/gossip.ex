@@ -192,9 +192,12 @@ defmodule Galaxy.Gossip do
   end
 
   defp maybe_connect_node(name, state)
-       when name != node() and is_atom(name) do
-    state.topology.connect_nodes([name])
-    Logger.debug(["Gossip connected ", name |> to_string(), " node"])
+       when is_atom(name) and name != node() do
+    unless name in state.topology.members() do
+      state.topology.connect_nodes([name])
+      Logger.debug(["Gossip connected ", name |> to_string(), " node"])
+    end
+
     :ok
   end
 
