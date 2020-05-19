@@ -23,11 +23,13 @@ defmodule Galaxy.DNS do
       topology = Keyword.fetch!(options, :topology)
       polling_interval = Keyword.fetch!(options, :polling_interval)
 
-      state = %{
-        topology: topology,
-        polling_interval: polling_interval,
-        services: services
-      }
+      state =
+        %{
+          topology: topology,
+          polling_interval: polling_interval,
+          services: services
+        }
+        |> IO.inspect()
 
       send(self(), :poll)
 
@@ -59,7 +61,7 @@ defmodule Galaxy.DNS do
   end
 
   defp resolve_service_nodes(service) do
-    case :inet_res.getbyname(service |> to_charlist(), :a) do
+    case :inet_res.getbyname(service |> to_charlist(), :srv) do
       {:ok, {:hostent, _, [], :inet, _, hosts}} ->
         hosts
 
