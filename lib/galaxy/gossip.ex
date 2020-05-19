@@ -67,7 +67,7 @@ defmodule Galaxy.Gossip do
   @sol_socket 0xFFFF
   @so_reuseport 0x0200
 
-  defp reuse_port_opts() do
+  defp reuse_port_opts do
     case :os.type() do
       {:unix, os_name} when os_name in [:darwin, :freebsd, :openbsd, :netbsd] ->
         [{:raw, @sol_socket, @so_reuseport, <<1::native-32>>}]
@@ -131,12 +131,12 @@ defmodule Galaxy.Gossip do
   end
 
   defp handle_peer(name, state) do
-    unless state.force_security do
+    if state.force_security do
+      Logger.debug(["Gossip refused unsecure node ", name, " to connect"])
+    else
       name
       |> String.to_atom()
       |> maybe_connect_node(state)
-    else
-      Logger.debug(["Gossip refused unsecure node ", name, " to connect"])
     end
 
     {:noreply, state}
@@ -144,10 +144,10 @@ defmodule Galaxy.Gossip do
 
   defp handle_heartbeat({:unsafe, payload}, state) do
     with {:ok, unserialized_payload} <- unserialize_heartbeat_payload(payload) do
-      unless state.force_security do
-        maybe_connect_node(unserialized_payload, state)
-      else
+      if state.force_security do
         Logger.debug(["Gossip refused unsecure node ", unserialized_payload, " to connect"])
+      else
+        maybe_connect_node(unserialized_payload, state)
       end
     end
 
@@ -176,17 +176,15 @@ defmodule Galaxy.Gossip do
   end
 
   defp unserialize_heartbeat_payload(payload) do
-    try do
-      unserialized_payload =
-        payload
-        |> :erlang.binary_to_term()
-        |> Map.get(:node)
+    unserialized_payload =
+      payload
+      |> :erlang.binary_to_term()
+      |> Map.get(:node)
 
-      {:ok, unserialized_payload}
-    rescue
-      ArgumentError ->
-        {:error, :bad_format}
-    end
+    {:ok, unserialized_payload}
+  rescue
+    ArgumentError ->
+      {:error, :bad_format}
   end
 
   defp maybe_connect_node(name, state)
@@ -202,6 +200,8 @@ defmodule Galaxy.Gossip do
 end
 
 defmodule Galaxy.Gossip.Crypto do
+  @moduledoc false
+
   def encrypt(data, secret) do
     iv = :crypto.strong_rand_bytes(16)
     key = :crypto.hash(:sha256, secret)

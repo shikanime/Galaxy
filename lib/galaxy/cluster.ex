@@ -31,7 +31,7 @@ defmodule Galaxy.Cluster do
     ],
     port: [
       type: :pos_integer,
-      default: 45892
+      default: 45_892
     ],
     multicast_if: [
       type: {:custom, __MODULE__, :address, []},
