@@ -62,7 +62,7 @@ defmodule Galaxy.Host do
     unconnected_hosts = registered_hosts -- knowns_hosts
     state.topology.connect_nodes(unconnected_hosts)
 
-    Enum.each(unconnected_hosts, &Logger.debug(["Host reconnected ", &1, " node"]))
+    Enum.each(unconnected_hosts, &Logger.debug(["Host reconnected ", &1 |> to_string(), " node"]))
 
     Process.send_after(self(), :poll, state.polling_interval)
 

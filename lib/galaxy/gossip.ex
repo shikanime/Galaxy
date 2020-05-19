@@ -132,7 +132,7 @@ defmodule Galaxy.Gossip do
 
   defp handle_peer(name, state) do
     if state.force_security do
-      Logger.debug(["Gossip refused unsecure node ", name, " to connect"])
+      Logger.debug(["Gossip refused unsecure node ", name |> to_string(), " to connect"])
     else
       name
       |> String.to_atom()
@@ -145,7 +145,11 @@ defmodule Galaxy.Gossip do
   defp handle_heartbeat({:unsafe, payload}, state) do
     with {:ok, unserialized_payload} <- unserialize_heartbeat_payload(payload) do
       if state.force_security do
-        Logger.debug(["Gossip refused unsecure node ", unserialized_payload, " to connect"])
+        Logger.debug([
+          "Gossip refused unsecure node ",
+          unserialized_payload |> to_string(),
+          " to connect"
+        ])
       else
         maybe_connect_node(unserialized_payload, state)
       end
@@ -190,7 +194,7 @@ defmodule Galaxy.Gossip do
   defp maybe_connect_node(name, state)
        when name != node() and is_atom(name) do
     state.topology.connect_nodes([name])
-    Logger.debug(["Gossip connected ", name, " node"])
+    Logger.debug(["Gossip connected ", name |> to_string(), " node"])
     :ok
   end
 
