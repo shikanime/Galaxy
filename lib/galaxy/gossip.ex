@@ -155,20 +155,17 @@ defmodule Galaxy.Gossip do
   end
 
   defp handle_heartbeat({:safe, iv, data}, state) do
-    with {:ok, bin_data} <- Crypto.decrypt(data, iv, state.secret_key_base) do
-      case bin_data do
-        "heartbeat::" <> payload ->
-          with {:ok, unserialized_payload} <- unserialize_heartbeat_payload(payload) do
-            maybe_connect_node(unserialized_payload, state)
-          end
-
-        _ ->
-          :ok
-      end
+    with {:ok, bin_data} <- Crypto.decrypt(data, iv, state.secret_key_base),
+         {:ok, payload} <- validate_heartbeat_message(bin_data),
+         {:ok, unserialized_payload} <- unserialize_heartbeat_payload(payload) do
+      maybe_connect_node(unserialized_payload, state)
     end
 
     {:noreply, state}
   end
+
+  defp validate_heartbeat_message("heartbeat::" <> payload), do: {:ok, payload}
+  defp validate_heartbeat_message(_), do: {:error, :bad_request}
 
   @impl true
   def terminate(_reason, %{socket: socket}) do
