@@ -33,7 +33,7 @@ defmodule Galaxy.Gossip do
     if_addr = Keyword.fetch!(options, :ip)
     multicast_addr = Keyword.fetch!(options, :multicast_addr)
     secret_key_base = Keyword.fetch!(options, :secret_key_base)
-    force_security = Keyword.fetch!(options, :force_security)
+    force_secure = Keyword.fetch!(options, :force_secure)
 
     opts = [
       :binary,
@@ -56,7 +56,7 @@ defmodule Galaxy.Gossip do
       port: port,
       multicast_addr: multicast_addr,
       secret_key_base: secret_key_base,
-      force_security: force_security
+      force_secure: force_secure
     }
 
     send(self(), :heartbeat)
@@ -131,7 +131,7 @@ defmodule Galaxy.Gossip do
   end
 
   defp handle_peer(name, state) do
-    if state.force_security do
+    if state.force_secure do
       Logger.debug(["Gossip refused unsecure node ", name |> to_string(), " to connect"])
     else
       name
@@ -143,7 +143,7 @@ defmodule Galaxy.Gossip do
   end
 
   defp handle_heartbeat({:unsafe, payload}, state) do
-    if state.force_security do
+    if state.force_secure do
       Logger.debug("Gossip refused unsecure node to connect")
     else
       with {:ok, unserialized_payload} <- unserialize_heartbeat_payload(payload) do

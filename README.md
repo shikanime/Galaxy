@@ -40,7 +40,7 @@ config :galaxy,
   gossip: true,
   gossip_opts: [
     delivery_mode: :multicast,
-    force_security: true,
+    force_secure: true,
     secret_key_base: "Vr0v/aJYhlum6PPS7DpH1gT+aJKIies+Ebp54vNKSeN67337BMYB1/SO62KzgK1e"
   ]
 end

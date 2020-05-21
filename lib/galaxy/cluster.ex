@@ -57,7 +57,7 @@ defmodule Galaxy.Cluster do
       type: :string,
       required: true
     ],
-    force_security: [
+    force_secure: [
       type: :boolean,
       default: false
     ]
