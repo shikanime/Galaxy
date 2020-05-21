@@ -143,14 +143,10 @@ defmodule Galaxy.Gossip do
   end
 
   defp handle_heartbeat({:unsafe, payload}, state) do
-    with {:ok, unserialized_payload} <- unserialize_heartbeat_payload(payload) do
-      if state.force_security do
-        Logger.debug([
-          "Gossip refused unsecure node ",
-          unserialized_payload |> to_string(),
-          " to connect"
-        ])
-      else
+    if state.force_security do
+      Logger.debug("Gossip refused unsecure node to connect")
+    else
+      with {:ok, unserialized_payload} <- unserialize_heartbeat_payload(payload) do
         maybe_connect_node(unserialized_payload, state)
       end
     end

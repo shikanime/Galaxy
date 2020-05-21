@@ -15,8 +15,14 @@ end
 
 ## Usage
 
-Node names can be registered either via the `.hosts.erlang` file, or by using a DNS
-service discovery such as a `headless-service` Kubernetes object.
+Node names can be registered either via the `.hosts.erlang` file, using DNS
+service discovery such as a Kubernetes `headless-service` object, or using the
+Gossip protocol compatible with `libcluster` and `Peerage` with security by
+default to prevent malicious [untrusted code
+injection](https://erlef.github.io/security-wg/secure_coding_and_deployment_hardening/sandboxing)
+or [atom
+exhaustion](https://erlef.github.io/security-wg/secure_coding_and_deployment_hardening/atom_exhaustion)
+on open network.
 
 ```elixir
 # In your config/releases.exs file
