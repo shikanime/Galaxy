@@ -34,7 +34,7 @@ headless_service =
     """
 
 config :galaxy,
-  topology: :erl_dist,
+  topology: Galaxy.Topology.Dist,
   hosts: [headless_service],
   polling_interval: 10_000,
   gossip: true,

@@ -6,7 +6,7 @@ defmodule Galaxy.Application do
   @config_schema [
     topology: [
       type: :atom,
-      default: :erl_dist
+      default: Galaxy.Topology.Dist
     ],
     hosts: [
       type: {:custom, __MODULE__, :hosts, []},
@@ -73,7 +73,6 @@ defmodule Galaxy.Application do
     config =
       Application.get_all_env(:galaxy)
       |> NimbleOptions.validate!(@config_schema)
-      |> Keyword.update!(:topology, &translate_topology/1)
 
     host_options = Keyword.take(config, [:topology])
     dns_options = Keyword.take(config, [:topology, :hosts, :epmd_port, :polling_interval])
@@ -99,9 +98,6 @@ defmodule Galaxy.Application do
         {:error, "hosts must be of type string got: #{inspect(fail_hosts)}"}
     end
   end
-
-  defp translate_topology(:erl_dist), do: Galaxy.Topology.ErlDist
-  defp translate_topology(topology), do: topology
 
   defp gossip_child_spec(config) do
     if Keyword.fetch!(config, :gossip) do
