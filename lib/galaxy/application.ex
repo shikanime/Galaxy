@@ -74,7 +74,7 @@ defmodule Galaxy.Application do
       Application.get_all_env(:galaxy)
       |> NimbleOptions.validate!(@config_schema)
 
-    host_options = Keyword.take(config, [:topology])
+    host_options = Keyword.take(config, [:topology, :polling_interval])
     dns_options = Keyword.take(config, [:topology, :hosts, :epmd_port, :polling_interval])
 
     children =
