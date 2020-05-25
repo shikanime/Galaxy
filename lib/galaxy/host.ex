@@ -54,9 +54,10 @@ defmodule Galaxy.Host do
     knowns_hosts = state.topology.members()
     registered_hosts = :net_adm.world_list(state.hosts)
     unconnected_hosts = registered_hosts -- knowns_hosts
-    state.topology.connect_nodes(unconnected_hosts)
 
-    Enum.each(unconnected_hosts, &Logger.debug(["Host reconnected ", &1 |> to_string(), " node"]))
+    {_, bad_nodes} = state.topology.connect_nodes(unconnected_hosts)
+
+    Enum.each(bad_nodes, &Logger.debug(["Host fail to connect ", &1 |> to_string(), " node"]))
 
     Process.send_after(self(), :poll, state.polling_interval)
 
