@@ -17,7 +17,8 @@ spec:
     spec:
       containers:
         - name: hello-kubernetes
-          image: shikanime/hello-kubernetes@sha256:5bfd148d9ea25c169d1352749cfb66fb2f84dfa8a170fbf386bab96699bfe9d4
+          image: shikanime/hello-kubernetes
+          imagePullPolicy: Never
           command:
             - hello_kubernetes
             - start
