@@ -33,14 +33,13 @@ defmodule Galaxy.Host do
       {:error, _} ->
         :ignore
 
-      hosts ->
+      _ ->
         topology = Keyword.fetch!(options, :topology)
         polling_interval = Keyword.fetch!(options, :polling_interval)
 
         state = %{
           topology: topology,
-          polling_interval: polling_interval,
-          hosts: hosts
+          polling_interval: polling_interval
         }
 
         send(self(), :poll)
@@ -52,7 +51,7 @@ defmodule Galaxy.Host do
   @impl true
   def handle_info(:poll, state) do
     knowns_hosts = state.topology.members()
-    registered_hosts = :net_adm.world_list(state.hosts)
+    registered_hosts = :net_adm.world()
     unconnected_hosts = registered_hosts -- knowns_hosts
 
     {_, bad_nodes} = state.topology.connect_nodes(unconnected_hosts)
