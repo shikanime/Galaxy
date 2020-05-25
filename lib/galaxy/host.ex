@@ -19,12 +19,6 @@ defmodule Galaxy.Host do
   'gauffin1.eua.ericsson.se'.
 
   ```
-
-  An optional timeout can be specified in the config. This is the timeout that
-  will be used in the GenServer to connect the nodes. This defaults to
-  `:infinity` meaning that the connection process will only happen when the
-  worker is started. Any integer timeout will result in the connection process
-  being triggered. In the example above, it has been configured for 30 seconds.
   """
   use GenServer
   require Logger
