@@ -17,7 +17,8 @@ defmodule Galaxy.DNS do
   @default_epmd_port 4369
 
   def start_link(options) do
-    GenServer.start_link(__MODULE__, options, name: __MODULE__)
+    {sup_opts, opts} = Keyword.split(options, [:name])
+    GenServer.start_link(__MODULE__, opts, sup_opts)
   end
 
   @impl true
