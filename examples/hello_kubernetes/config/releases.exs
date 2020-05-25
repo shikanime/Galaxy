@@ -8,6 +8,5 @@ headless_service =
     """
 
 config :galaxy,
-  topology: :erl_dist,
   hosts: [headless_service],
   polling_interval: 10_000
