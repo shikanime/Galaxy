@@ -22,18 +22,32 @@ defmodule Galaxy.Gossip do
   require Logger
   alias Galaxy.Gossip.Crypto
 
+  @default_ip {0, 0, 0, 0}
+  @default_port 45_892
+  @default_multicast_addr {230, 1, 1, 251}
+  @default_multicast_ttl 1
+  @default_delivery_mode :multicast
+  @default_security false
+
   def start_link(options) do
-    GenServer.start_link(__MODULE__, options, name: __MODULE__)
+    {sup_opts, opts} = Keyword.split(options, [:name])
+    GenServer.start_link(__MODULE__, opts, sup_opts)
   end
 
   @impl true
   def init(options) do
-    topology = Keyword.fetch!(options, :topology)
-    port = Keyword.fetch!(options, :port)
-    if_addr = Keyword.fetch!(options, :ip)
-    multicast_addr = Keyword.fetch!(options, :multicast_addr)
-    secret_key_base = Keyword.fetch!(options, :secret_key_base)
-    force_secure = Keyword.fetch!(options, :force_secure)
+    unless secret_key_base = options[:secret_key_base] do
+      raise ArgumentError, "expected :secret_key_base option to be given"
+    end
+
+    unless topology = options[:topology] do
+      raise ArgumentError, "expected :topology option to be given"
+    end
+
+    port = Keyword.get(options, :port, @default_port)
+    if_addr = Keyword.get(options, :ip, @default_ip)
+    multicast_addr = Keyword.get(options, :multicast_addr, @default_multicast_addr)
+    force_secure = Keyword.get(options, :force_secure, @default_security)
 
     opts = [
       :binary,
@@ -78,13 +92,13 @@ defmodule Galaxy.Gossip do
   end
 
   defp multicast_opts(config) do
-    case Keyword.fetch!(config, :delivery_mode) do
+    case Keyword.get(config, :delivery_mode, @default_delivery_mode) do
       :broadcast ->
         []
 
       :multicast ->
-        if multicast_if = Keyword.get(config, :multicast_if) do
-          multicast_ttl = Keyword.fetch!(config, :multicast_ttl)
+        if multicast_if = Keyword.get(config, :multicast_if, false) do
+          multicast_ttl = Keyword.get(config, :multicast_ttl, @default_multicast_ttl)
 
           [
             multicast_if: multicast_if,
@@ -166,6 +180,9 @@ defmodule Galaxy.Gossip do
     {:noreply, state}
   end
 
+  def address(ip),
+    do: ip |> to_charlist() |> :inet.parse_address()
+
   defp validate_heartbeat_message("heartbeat::" <> payload), do: {:ok, payload}
   defp validate_heartbeat_message(_), do: {:error, :bad_request}
 
@@ -193,7 +210,7 @@ defmodule Galaxy.Gossip do
         {[], _} ->
           :ok
 
-        {[name],_} ->
+        {[name], _} ->
           Logger.debug(["Gossip connected ", name |> to_string(), " node"])
       end
     end

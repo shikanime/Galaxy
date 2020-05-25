@@ -13,29 +13,37 @@ defmodule Galaxy.DNS do
   use GenServer
   require Logger
 
+  @default_polling_interval 5000
+  @default_epmd_port 4369
+
   def start_link(options) do
     GenServer.start_link(__MODULE__, options, name: __MODULE__)
   end
 
   @impl true
   def init(options) do
-    if hosts = Keyword.get(options, :hosts) do
-      topology = Keyword.fetch!(options, :topology)
-      epmd_port = Keyword.fetch!(options, :epmd_port)
-      polling_interval = Keyword.fetch!(options, :polling_interval)
+    case Keyword.get(options, :hosts) do
+      [] ->
+        :ignore
 
-      state = %{
-        topology: topology,
-        hosts: hosts,
-        epmd_port: epmd_port,
-        polling_interval: polling_interval
-      }
+      hosts ->
+        unless topology = options[:topology] do
+          raise ArgumentError, "expected :topology option to be given"
+        end
 
-      send(self(), :poll)
+        polling_interval = Keyword.get(options, :polling_interval, @default_polling_interval)
+        epmd_port = Keyword.get(options, :epmd_port, @default_epmd_port)
 
-      {:ok, state}
-    else
-      :ignore
+        state = %{
+          topology: topology,
+          hosts: hosts,
+          epmd_port: epmd_port,
+          polling_interval: polling_interval
+        }
+
+        send(self(), :poll)
+
+        {:ok, state}
     end
   end
 

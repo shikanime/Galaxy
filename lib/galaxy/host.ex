@@ -23,6 +23,8 @@ defmodule Galaxy.Host do
   use GenServer
   require Logger
 
+  @default_polling_interval 5000
+
   def start_link(options) do
     GenServer.start_link(__MODULE__, options, name: __MODULE__)
   end
@@ -34,8 +36,11 @@ defmodule Galaxy.Host do
         :ignore
 
       _ ->
-        topology = Keyword.fetch!(options, :topology)
-        polling_interval = Keyword.fetch!(options, :polling_interval)
+        unless topology = options[:topology] do
+          raise ArgumentError, "expected :topology option to be given"
+        end
+
+        polling_interval = Keyword.get(options, :polling_interval, @default_polling_interval)
 
         state = %{
           topology: topology,

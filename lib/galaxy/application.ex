@@ -13,12 +13,10 @@ defmodule Galaxy.Application do
       default: []
     ],
     polling_interval: [
-      type: :pos_integer,
-      default: 5000
+      type: :pos_integer
     ],
     epmd_port: [
-      type: :pos_integer,
-      default: 4369
+      type: :pos_integer
     ],
     gossip: [
       type: :boolean,
@@ -31,36 +29,29 @@ defmodule Galaxy.Application do
 
   @gossip_config_schema [
     ip: [
-      type: {:custom, __MODULE__, :address, []},
-      default: {0, 0, 0, 0}
+      type: {:custom, __MODULE__, :address, []}
     ],
     port: [
-      type: :pos_integer,
-      default: 45_892
+      type: :pos_integer
     ],
     multicast_if: [
-      type: {:custom, __MODULE__, :address, []},
-      default: nil
+      type: {:custom, __MODULE__, :address, []}
     ],
     multicast_addr: [
-      type: {:custom, __MODULE__, :address, []},
-      default: {230, 1, 1, 251}
+      type: {:custom, __MODULE__, :address, []}
     ],
     multicast_ttl: [
-      type: :pos_integer,
-      default: 1
+      type: :pos_integer
     ],
     delivery_mode: [
-      type: {:one_of, [:broadcast, :multicast]},
-      default: :multicast
+      type: {:one_of, [:broadcast, :multicast]}
     ],
     secret_key_base: [
       type: :string,
       required: true
     ],
     force_secure: [
-      type: :boolean,
-      default: false
+      type: :boolean
     ]
   ]
 
@@ -74,8 +65,15 @@ defmodule Galaxy.Application do
       Application.get_all_env(:galaxy)
       |> NimbleOptions.validate!(@config_schema)
 
-    host_options = Keyword.take(config, [:topology, :polling_interval])
-    dns_options = Keyword.take(config, [:topology, :hosts, :epmd_port, :polling_interval])
+    host_options =
+      config
+      |> Keyword.take([:topology, :polling_interval])
+      |> Keyword.put(:name, Galaxy.Host)
+
+    dns_options =
+      config
+      |> Keyword.take([:topology, :hosts, :epmd_port, :polling_interval])
+      |> Keyword.put(:name, Galaxy.DNS)
 
     children =
       [
@@ -105,9 +103,10 @@ defmodule Galaxy.Application do
 
       gossip_opts =
         config
-        |> Keyword.fetch!(:gossip_opts)
+        |> Keyword.get(:gossip_opts, [])
         |> NimbleOptions.validate!(@gossip_config_schema)
         |> Keyword.put(:topology, topology)
+        |> Keyword.put(:name, Galaxy.Gossip)
 
       [{Galaxy.Gossip, gossip_opts}]
     else
