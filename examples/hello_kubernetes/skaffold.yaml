@@ -1,0 +1,15 @@
+apiVersion: skaffold/v2beta1
+kind: Config
+metadata:
+  name: hello-kubernetes
+build:
+  artifacts:
+    - image: shikanime/hello-kubernetes
+      docker:
+        dockerfile: examples/hello_kubernetes/Dockerfile
+      context: ../../
+deploy:
+  kubectl:
+    manifests:
+      - manifests/statefulset.yaml
+      - manifests/svc-headless.yaml
