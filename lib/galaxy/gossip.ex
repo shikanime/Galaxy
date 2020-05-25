@@ -203,8 +203,7 @@ defmodule Galaxy.Gossip do
       {:error, :bad_format}
   end
 
-  defp maybe_connect_node(name, state)
-       when is_atom(name) and name != node() do
+  defp maybe_connect_node(name, state) when is_atom(name) and name != node() do
     unless name in state.topology.members() do
       case state.topology.connect_nodes([name]) do
         {[], _} ->
