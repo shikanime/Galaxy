@@ -10,7 +10,6 @@ defmodule Galaxy.MixProject do
       app: :galaxy,
       version: @version,
       name: "Galaxy",
-      package: package(),
       elixir: "~> 1.10",
       docs: docs(),
       deps: deps(),
