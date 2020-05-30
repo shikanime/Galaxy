@@ -20,10 +20,12 @@ COPY examples/hello_kubernetes/lib ./lib
 COPY examples/hello_kubernetes/config ./config
 COPY examples/hello_kubernetes/rel ./rel
 
+FROM builder AS releaser
+
 RUN --mount=id=deps-cache,type=cache,sharing=locked,target=./deps \
   mix release --overwrite
 
-FROM alpine:3.11.6
+FROM alpine:3.11.6 AS runner
 
 RUN --mount=type=cache,id=apk,sharing=locked,target=/var/cache/apk \
   ln -vs /var/cache/apk /etc/apk/cache && \
@@ -31,7 +33,7 @@ RUN --mount=type=cache,id=apk,sharing=locked,target=/var/cache/apk \
 
 ENV RELEASE_TMP=/tmp
 
-COPY --from=builder /agonex/src/examples/hello_kubernetes/_build/dev/rel/hello_kubernetes /hello_kubernetes
+COPY --from=releaser /agonex/src/examples/hello_kubernetes/_build/dev/rel/hello_kubernetes /hello_kubernetes
 
 ENV PATH=/hello_kubernetes/bin:$PATH
 

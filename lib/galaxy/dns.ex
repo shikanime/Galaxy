@@ -13,6 +13,7 @@ defmodule Galaxy.DNS do
   use GenServer
   require Logger
 
+  @default_initial_delay 0
   @default_polling_interval 5000
   @default_epmd_port 4369
 
@@ -32,6 +33,7 @@ defmodule Galaxy.DNS do
           raise ArgumentError, "expected :topology option to be given"
         end
 
+        initial_delay = Keyword.get(options, :initial_delay, @default_initial_delay)
         polling_interval = Keyword.get(options, :polling_interval, @default_polling_interval)
         epmd_port = Keyword.get(options, :epmd_port, @default_epmd_port)
 
@@ -42,7 +44,7 @@ defmodule Galaxy.DNS do
           polling_interval: polling_interval
         }
 
-        send(self(), :poll)
+        Process.send_after(self(), :poll, initial_delay)
 
         {:ok, state}
     end

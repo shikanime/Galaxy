@@ -12,6 +12,9 @@ defmodule Galaxy.Application do
       type: {:custom, __MODULE__, :hosts, []},
       default: []
     ],
+    initial_delay: [
+      type: :non_neg_integer
+    ],
     polling_interval: [
       type: :pos_integer
     ],
@@ -67,12 +70,12 @@ defmodule Galaxy.Application do
 
     host_options =
       config
-      |> Keyword.take([:topology, :polling_interval])
+      |> Keyword.take([:topology, :initial_delay, :polling_interval])
       |> Keyword.put(:name, Galaxy.Host)
 
     dns_options =
       config
-      |> Keyword.take([:topology, :hosts, :epmd_port, :polling_interval])
+      |> Keyword.take([:topology, :hosts, :epmd_port, :initial_delay, :polling_interval])
       |> Keyword.put(:name, Galaxy.DNS)
 
     children =
