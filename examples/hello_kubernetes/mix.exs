@@ -20,6 +20,9 @@ defmodule HelloKubernetes.MixProject do
         applications: [
           runtime_tools: :permanent,
           hello_kubernetes: :permanent
+        ],
+        config_providers: [
+          {Config.Reader, "/etc/hello_kubernetes/config.exs"}
         ]
       ]
     ]

@@ -1,4 +1,3 @@
 %{
-  "galaxy": {:git, "https://github.com/Shikanime/Galaxy.git", "45cd591b9ec8cf347f9ea36587f27def91dc2601", []},
   "nimble_options": {:hex, :nimble_options, "0.2.1", "7eac99688c2544d4cc3ace36ee8f2bf4d738c14d031bd1e1193aab096309d488", [:mix], [], "hexpm", "ca48293609306791ce2634818d849b7defe09330adb7e4e1118a0bc59bed1cf4"},
 }

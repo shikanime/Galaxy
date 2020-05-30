@@ -17,7 +17,6 @@ RUN --mount=id=hex-cache,type=cache,sharing=locked,target=/root/.hex \
 
 COPY lib /agonex/src/lib
 COPY examples/hello_kubernetes/lib ./lib
-COPY examples/hello_kubernetes/config ./config
 COPY examples/hello_kubernetes/rel ./rel
 
 FROM builder AS releaser

@@ -11,3 +11,7 @@ resources:
   - namespace.yaml
   - statefulset.yaml
   - svc-headless.yaml
+configMapGenerator:
+  - files:
+      - config.exs
+    name: hello-kubernetes

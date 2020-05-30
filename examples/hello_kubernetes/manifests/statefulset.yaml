@@ -20,11 +20,6 @@ spec:
         - name: hello-kubernetes
           image: shikanime/hello-kubernetes
           imagePullPolicy: Never
-          command:
-            - hello_kubernetes
-            - start
-            - -kernel inet_dist_listen_min 49200
-            - -kernel inet_dist_listen_max 49200
           ports:
             - containerPort: 4369
               name: epmd
@@ -42,3 +37,13 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "2000m"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/hello_kubernetes
+      volumes:
+        - name: config
+          configMap:
+            name: hello-kubernetes
+            items:
+              - key: config.exs
+                path: config.exs
