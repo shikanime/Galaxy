@@ -54,9 +54,9 @@ defmodule Galaxy.DNS do
     discovered_hosts = poll_services_hosts(state.hosts, state.epmd_port)
     new_hosts = discovered_hosts -- knowns_hosts
 
-    {good_nodes, _} = state.topology.connect_nodes(new_hosts)
+    {nodes, _} = state.topology.connect_nodes(new_hosts)
 
-    Enum.each(good_nodes, &Logger.debug(["DNS connected ", &1 |> to_string(), " node"]))
+    Enum.each(nodes, &Logger.debug(["DNS connected ", &1 |> to_string(), " node"]))
 
     Process.send_after(self(), :poll, state.polling_interval)
 
