@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: hello-kubernetes
+commonLabels:
+  app.kubernetes.io/name: hello-kubernetes
+  app.kubernetes.io/instance: galaxy-hello-kubernetes
+  app.kubernetes.io/version: "0.1.0"
+  app.kubernetes.io/component: example
+  app.kubernetes.io/part-of: galaxy
+resources:
+  - namespace.yaml
+  - statefulset.yaml
+  - svc-headless.yaml

@@ -15,6 +15,7 @@ spec:
       labels:
         app: hello-kubernetes
     spec:
+      shareProcessNamespace: true
       containers:
         - name: hello-kubernetes
           image: shikanime/hello-kubernetes
@@ -36,6 +37,8 @@ spec:
               value: name
           resources:
             requests:
-              cpu: 250m
-              memory: 256Mi
-  volumeClaimTemplates: []
+              memory: "250Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "2000m"

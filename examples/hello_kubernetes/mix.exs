@@ -17,7 +17,6 @@ defmodule HelloKubernetes.MixProject do
     [
       hello_kubernetes: [
         include_executables_for: [:unix],
-        include_erts: false,
         applications: [
           runtime_tools: :permanent,
           hello_kubernetes: :permanent
