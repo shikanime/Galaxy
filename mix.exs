@@ -3,7 +3,7 @@ defmodule Galaxy.MixProject do
 
   use Mix.Project
 
-  @version "0.6.7"
+  @version "0.6.8"
 
   def project do
     [
